@@ -4,9 +4,13 @@ import 'package:kimble/game.dart';
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
+
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+
+
 
     //route names
     return MaterialApp(
@@ -25,6 +29,7 @@ class MyApp extends StatelessWidget {
 class MainMenu extends StatefulWidget {
   MainMenu({Key key, this.title}) : super(key: key);
   final String title;
+
 
   @override
   _MainMenuState createState() => _MainMenuState();
