@@ -1,24 +1,11 @@
 import 'package:flutter/material.dart';
 
-class Piece extends StatefulWidget {
+class PieceData {
 
-  Piece(this.col);
-  final Color col;
+  PieceData(this.steps,this.color);
+  Color color;
+  int steps;
+  bool atHome = true;
+  bool isMine = false;
 
-    _PieceState createState() => _PieceState(col);
-  }
-
-  class _PieceState extends State<Piece> {
-    _PieceState(this.col);
-    final Color col;
-    int steps = 0;
-    bool  atHome = true;
-    bool isMine = false;
-
-
-    Widget build(BuildContext context){
-      return Icon(Icons.brightness_1,
-        color: col);
-    }
-
-  }
+}

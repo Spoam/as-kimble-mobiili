@@ -6,6 +6,8 @@ class Die extends StatefulWidget{
   Die({Key key, this.title}) : super(key: key);
   final String title;
 
+  int side = 0;
+
   @override
   _DieState createState() => _DieState();
 
@@ -16,7 +18,7 @@ class _DieState extends State<Die>{
   Random rand = Random(1);
   int side = 0;
 
-
+  int getSide(){ return side;}
 
   void _longPressEnd(LongPressEndDetails details){
     setState(() {});
@@ -36,8 +38,12 @@ class _DieState extends State<Die>{
         side = rand.nextInt(6) + 1;
 
       },
-      child:Text('noppa:$side'),
-
+      child:Container(
+        width: 30,
+        height: 30,
+        color:Colors.white,
+        child: Text('$side'),
+      )
     );
   }
 }
