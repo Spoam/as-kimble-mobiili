@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kimble/dice.dart';
 import 'package:kimble/piece.dart';
 import 'dart:math';
+import 'dart:core';
 
 enum Turn{
   RED,
@@ -54,7 +55,7 @@ class _GameWindowState extends State<GameWindow>{
 
   int diceVal = 1;
 
-  Random rand = Random(1);
+  Random rand = Random(DateTime.now().microsecond);
 
   void _longPressEnd(LongPressEndDetails details){
     setState(() {});
@@ -149,6 +150,7 @@ class _GameWindowState extends State<GameWindow>{
 
     //update selected piece to first piece of next player
     selectedPiece = _findPiece(3);
+    _radioGroupVal = 3;
 
   }
 
@@ -156,9 +158,9 @@ class _GameWindowState extends State<GameWindow>{
 
   void _handleRadioValueChange(int value) {
     setState(() {
-      int _radioValue = value;
+      _radioGroupVal = value;
 
-      switch (_radioValue) {
+      switch (_radioGroupVal) {
         case 0:
           selectedPiece = _findPiece(0);
           break;
@@ -190,7 +192,7 @@ class _GameWindowState extends State<GameWindow>{
 
   bool first = true;
 
-
+  int _radioGroupVal = 3;
 
   Widget build(BuildContext context){
 
@@ -225,7 +227,6 @@ class _GameWindowState extends State<GameWindow>{
     ));
 
 
-
     return Scaffold(
         body:ListView(
           children:[
@@ -236,7 +237,7 @@ class _GameWindowState extends State<GameWindow>{
               children: <Widget>[
                 Radio(
                 value: 0,
-                  groupValue: -1,
+                  groupValue: _radioGroupVal,
                   onChanged: _handleRadioValueChange,
                 ),
                 Text(
@@ -245,7 +246,7 @@ class _GameWindowState extends State<GameWindow>{
 
                 Radio(
                   value: 1,
-                  groupValue: -1,
+                  groupValue: _radioGroupVal,
                   onChanged: _handleRadioValueChange,
                 ),
                 Text(
@@ -254,7 +255,7 @@ class _GameWindowState extends State<GameWindow>{
 
                 Radio(
                   value: 2,
-                  groupValue: -1,
+                  groupValue: _radioGroupVal,
                   onChanged: _handleRadioValueChange,
                 ),
                 Text(
@@ -262,7 +263,7 @@ class _GameWindowState extends State<GameWindow>{
                 ),
                 Radio(
                   value: 3,
-                  groupValue: -1,
+                  groupValue: _radioGroupVal,
                   onChanged: _handleRadioValueChange,
                 ),
                 Text(
