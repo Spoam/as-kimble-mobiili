@@ -18,22 +18,31 @@ class _GameWindowState extends State<GameWindow>{
   List<Positioned> pieceIcons = new List(16);
   List<PieceData> pieceData = new List(16);
   //List<List<double>> board = [[10,10],[20,20],[40,40],[60,60],[80,80],[100,100],[120,120],[140,140]];
-  List<List<double>> board = new List(40*2);
+  List<List<double>> board = new List(28*2);
+  List<Positioned> boardIcons = new List(28);
 
 
-  void _initBoard(){
-    int n = 0;
-    for(double i = 0; i < 10; i++){
-      for(double j = 0; j < 10; j++) {
-        if(i == 0 || j == 0){
-          board[n] = [i * 20, j * 20];
-          n++;
-        }
-      }
+
+  void _initBoard(double width){
+    for(int i = 0; i < 28; i++){
+        //x = sin(i),y = cos(i) => ympyrä
+        board[i] = [width/2 - 10 + width/2.5 * sin(i/(28/(2*pi))), width/2 + width/2.5 * cos(i/(28/(2*pi)))];
     }
+
   }
 
+  void _createBoardIcons() {
 
+    for(int i = 0; i < 28; i++) {
+      boardIcons[i] = Positioned(
+        top: board[i][1],
+        left: board[i][0],
+        child: Icon(Icons.gps_not_fixed,
+          color: Colors.grey,),
+      );
+    }
+
+  }
 
   int diceVal = 1;
 
@@ -118,30 +127,37 @@ class _GameWindowState extends State<GameWindow>{
     double height = MediaQuery.of(context).size.height;
 
     if(first) {
-      _initBoard();
+      _initBoard(width);
       _initPieces(width, height);
+      _createBoardIcons();
       first = false;
     }
+
+    //add all widgetts to a signle list
+    List<Widget> all = [];
+    //board
+    all.add(Container(
+      margin: const EdgeInsets.all(10.0),
+      color: Colors.amber[600],
+      width: width,
+      height: width,
+    ));
+
+    all.addAll(boardIcons);
+    all.addAll(pieceIcons);
+
+    //dice
+    all.add(Positioned(
+      top: width / 2 - 15,
+      left: width / 2 - 15,
+      child:_dice(),
+    ));
 
       return Scaffold(
           body:ListView(
             children:[
               Stack(
-                children:[
-                  Container(
-                    margin: const EdgeInsets.all(10.0),
-                    color: Colors.amber[600],
-                    width: width,
-                    height: width,
-                  ),
-                  //älä kysy
-                  pieceIcons[0],pieceIcons[1],pieceIcons[2],pieceIcons[3],pieceIcons[4],pieceIcons[5],pieceIcons[6],pieceIcons[7],pieceIcons[8],pieceIcons[9],pieceIcons[10],pieceIcons[11],pieceIcons[12],pieceIcons[13],pieceIcons[14],pieceIcons[15],
-                  Positioned(
-                    top: width / 2 - 15,
-                    left: width / 2 - 15,
-                    child:_dice(),
-                  )
-                ],
+                children:all,
               ),
               FloatingActionButton(
                 onPressed:(){
