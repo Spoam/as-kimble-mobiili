@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 
 class PieceData {
 
-  PieceData(this.steps,this.color);
+  PieceData(this.pos,this.color);
   Color color;
-  int steps;
+  int steps = 0;
+  int pos;
   bool atHome = true;
   bool isMine = false;
 
