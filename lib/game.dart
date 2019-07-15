@@ -50,12 +50,13 @@ class _GameWindowState extends State<GameWindow>{
           color: Colors.grey,),
       );
     }
-
   }
 
   int diceVal = 1;
 
   Random rand = Random(DateTime.now().microsecond);
+
+  bool diceRolled = false;
 
   void _longPressEnd(LongPressEndDetails details){
     setState(() {});
@@ -71,9 +72,14 @@ class _GameWindowState extends State<GameWindow>{
         onLongPressEnd: _longPressEnd,
         onTapUp: _tapUp,
         onTap: (){
-          setState(() {});
-          diceVal = rand.nextInt(6) + 1;
+          setState(() {
 
+            if(!diceRolled){
+              diceVal = rand.nextInt(6) + 1;
+              diceRolled = true;
+              _checkLegalMoves();
+            }
+          });
         },
         child:Container(
           width: 30,
@@ -123,34 +129,81 @@ class _GameWindowState extends State<GameWindow>{
     }
   }
 
+  void _double(){
+    //TODO
+  }
+
   void _movePiece(int n){
-    pieceData[n].steps += diceVal;
-    pieceData[n].pos += diceVal;
+    int move = 0;
+    if(pieceData[n].atHome == true && diceVal == 6){
+      move = 1;
+      pieceData[n].atHome = false;
+      _double();
+    }else{
+      move = diceVal;
+    }
+    pieceData[n].steps += move;
+    pieceData[n].pos += move;
+    pieceData[n].steps == 1 ? pieceData[n].isMine = true : pieceData[n].isMine = false;
     //loop board
     if(pieceData[n].pos > 27) pieceData[n].pos -= 28;
 
     pieceIcons[n] = _placePiece(board[pieceData[n].pos][0], board[pieceData[n].pos][1], pieceData[n].color);
   }
 
+  List<bool> legalMoves = [true,true,true,true];
+
+  void _checkLegalMoves(){
+
+    List<PieceData> data = [];
+    List<List<int>> pieces = _findPiece(cur);
+    data.add(pieceData[pieces[0][1]]);
+    data.add(pieceData[pieces[1][1]]);
+    data.add(pieceData[pieces[2][1]]);
+    data.add(pieceData[pieces[3][1]]);
+    
+    legalMoves.setAll(0, [true, true, true, true]);
+
+
+    if(diceVal != 6){
+      for(int i = 0; i < 4; i++){
+        if(data[i].atHome) legalMoves[i] = false;
+      }
+
+      //test for a friendly piece in the same spot
+      for(int i = 0; i < 4; i++){
+        int nextPos = data[i].pos + diceVal;
+        if(nextPos > 27) nextPos -= 28;
+        var samePos = data.where((piece) => piece.pos == nextPos);
+        if(samePos.length > 0) legalMoves[i] = false;
+      }
+    }else{
+      for(int i = 0; i < 4; i++){
+        if(data[i].atHome) legalMoves[i] = true;
+      }
+    }
+
+  }
+
   void _handleTurn(int idx){
 
     if(cur == Turn.RED){
-      _movePiece(idx);
       cur = Turn.BLUE;
     }else if(cur == Turn.BLUE){
-      _movePiece(idx);
       cur = Turn.GREEN;
     }else if(cur == Turn.GREEN){
-      _movePiece(idx);
       cur = Turn.YELLOW;
     }else if(cur == Turn.YELLOW){
-      _movePiece(idx);
       cur = Turn.RED;
     }
 
+    if(idx != null) _movePiece(idx);
+
     //update selected piece to first piece of next player
-    selectedPiece = _findPiece(3);
     _radioGroupVal = 3;
+    selectedPiece = _findPiece(cur)[_radioGroupVal][1];
+
+    diceRolled = false;
 
   }
 
@@ -162,23 +215,23 @@ class _GameWindowState extends State<GameWindow>{
 
       switch (_radioGroupVal) {
         case 0:
-          selectedPiece = _findPiece(0);
+          selectedPiece = _findPiece(cur)[0][1];
           break;
       case 1:
-          selectedPiece = _findPiece(1);
+          selectedPiece = _findPiece(cur)[1][1];
           break;
       case 2:
-          selectedPiece = _findPiece(2);
+          selectedPiece = _findPiece(cur)[2][1];
           break;
       case 3:
-          selectedPiece = _findPiece(3);
+          selectedPiece = _findPiece(cur)[3][1];
           break;
 
     }
     });
   }
 
-  int _findPiece(int idx){
+  List<List<int>> _findPiece(Turn cur){
 
     List<List<int>> order = new List(4);
     int n = 0;
@@ -187,7 +240,7 @@ class _GameWindowState extends State<GameWindow>{
       n++;
     }
     order.sort((a,b) => a[0].compareTo(b[0]));
-    return order[idx][1];
+    return order;
   }
 
   bool first = true;
@@ -235,53 +288,49 @@ class _GameWindowState extends State<GameWindow>{
             ),
             Row(
               children: <Widget>[
-                Radio(
+                legalMoves[0] ? Radio(
                 value: 0,
                   groupValue: _radioGroupVal,
                   onChanged: _handleRadioValueChange,
-                ),
-                Text(
-                    'Vika',
-                ),
+                ) : Container(),
+                legalMoves[0] ? Text('Vika') : Text(''),
 
-                Radio(
+                legalMoves[1] ? Radio(
                   value: 1,
                   groupValue: _radioGroupVal,
                   onChanged: _handleRadioValueChange,
-                ),
-                Text(
-                  'Kolmas',
-                ),
+                ) : Container(),
+                legalMoves[1] ? Text('Kolmas') : Text(''),
 
-                Radio(
+                legalMoves[2] ? Radio(
                   value: 2,
                   groupValue: _radioGroupVal,
                   onChanged: _handleRadioValueChange,
-                ),
-                Text(
-                  'Toka',
-                ),
-                Radio(
+                ) : Container(),
+                legalMoves[2] ? Text('Toka') : Text(''),
+
+                legalMoves[3] ? Radio(
                   value: 3,
                   groupValue: _radioGroupVal,
                   onChanged: _handleRadioValueChange,
-                ),
-                Text(
-                  'Kärki',
-                ),
-
-
+                ) : Container(),
+                legalMoves[3] ? Text('Kärki') : Text(''),
               ],
 
             ),
-            FloatingActionButton(
-              onPressed:(){
+            diceRolled ?  RaisedButton(
+              onPressed: (){
                 setState(() {
-                  _handleTurn(selectedPiece);
+                  if(legalMoves.contains(true)) {
+                    _handleTurn(selectedPiece);
+                  }else{
+                    _handleTurn(null);
+                  }
                 });
               },
-              child:Text('liiku'),
-            ),
+              child:Text('Liiku/Lopeta vuoro')
+            ) : Container(),
+
             Text('$cur'),
             Text('$selectedPiece'),
 
