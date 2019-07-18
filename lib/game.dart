@@ -35,7 +35,7 @@ class _GameWindowState extends State<GameWindow>{
   void _initBoard(double width){
     for(int i = 0; i < 28; i++){
         //x = sin(i),y = cos(i) => ympyrä
-        board[i] = [width/2 - 10 + width/2.5 * sin(i/(28/(2*pi))), width/2 + width/2.5 * cos(i/(28/(2*pi)))];
+        board[i] = [width/2 - 10 + width/2.5 * cos(i/(28/(2*pi))), width/2 + width/2.5 * sin(i/(28/(2*pi)))];
     }
 
   }
@@ -46,9 +46,13 @@ class _GameWindowState extends State<GameWindow>{
       boardIcons[i] = Positioned(
         top: board[i][1],
         left: board[i][0],
-        child: Icon(Icons.gps_not_fixed,
+        child:Row(children:
+        [
+          Icon(Icons.gps_not_fixed,
           color: Colors.grey,),
-      );
+          Text('$i'),
+      ]),
+    );
     }
   }
 
@@ -78,6 +82,10 @@ class _GameWindowState extends State<GameWindow>{
               diceVal = rand.nextInt(6) + 1;
               diceRolled = true;
               _checkLegalMoves();
+            }else{ //DEBUG poist tää
+              diceVal = rand.nextInt(6) + 1;
+              diceRolled = true;
+              _checkLegalMoves();
             }
           });
         },
@@ -94,13 +102,11 @@ class _GameWindowState extends State<GameWindow>{
     );
   }
 
-  Positioned _placePiece(double x, double y,Color col){
+  Positioned _placePiece(double x, double y,Color col, int multiplier){
     return Positioned(
       top: y,
       left: x,
-      child: Icon(Icons.brightness_1,
-          color: col),
-
+      child: (multiplier > 1) ? Icon(Icons.add_circle, color: col) : Icon(Icons.brightness_1, color: col,),
     );
   }
 
@@ -111,26 +117,57 @@ class _GameWindowState extends State<GameWindow>{
     double pieceSize = 20;
 
     for(int i = 0; i < 16; i++){
+
       if(i / 4 < 1){
-        pieceIcons[i] = _placePiece(sideMargin, width / 2 - pieceSize + pieceSize*i,Colors.red);
-        pieceData[i] = PieceData(21,Colors.red);
+
+        double x = sideMargin;
+        double y = width / 2 - pieceSize + pieceSize*i;
+
+        pieceIcons[i] = _placePiece(x, y,Colors.red, 1);
+        pieceData[i] = PieceData(14,14,Colors.red,[x ,y]);
 
       }else if(i / 4 < 2){
-        pieceIcons[i] = _placePiece(width / 2 - 3*pieceSize + pieceSize * (i-3), topMargin, Colors.indigo);
-        pieceData[i] = PieceData(14,Colors.indigo);
+
+        double x = width / 2 - 3*pieceSize + pieceSize * (i-3);
+        double y = topMargin;
+
+        pieceIcons[i] = _placePiece(x, y, Colors.indigo, 1);
+        pieceData[i] = PieceData(21,21,Colors.indigo, [x ,y]);
 
       }else if(i / 4 < 3){
-        pieceIcons[i] = _placePiece(width - pieceSize - sideMargin, width / 2 - 2*pieceSize + pieceSize*(i - 7), Colors.green);
-        pieceData[i] = PieceData(7,Colors.green);
+
+        double x = width - pieceSize - sideMargin;
+        double y =  width / 2 - 2*pieceSize + pieceSize*(i - 7);
+
+        pieceIcons[i] = _placePiece(x, y, Colors.green, 1);
+        pieceData[i] = PieceData(0,0,Colors.green, [x ,y]);
       }else if(i / 4 < 4){
-        pieceIcons[i] = _placePiece(width / 2 - pieceSize*3 + pieceSize*(i-11), width - pieceSize, Colors.yellow);
-        pieceData[i] = PieceData(0,Colors.yellow);
+
+        double x = width / 2 - pieceSize*3 + pieceSize*(i-11);
+        double y = width - pieceSize;
+
+        pieceIcons[i] = _placePiece(x , y, Colors.yellow, 1);
+        pieceData[i] = PieceData(7,7,Colors.yellow, [x ,y]);
       }
     }
   }
 
-  void _double(){
-    //TODO
+  bool _double(int n){
+    int index = _getPieceAt(pieceData[n].startPos + 1);
+    if(index != null) {
+      if (pieceData[n].color == pieceData[index].color) {
+          pieceData[index].multiplier++;
+          pieceData[index].doubleMembers.add(n);
+          pieceData[n].reset();
+          pieceData[n].isInDouble = true;
+
+          pieceIcons[index] = _placePiece(board[pieceData[index].pos][0], board[pieceData[index].pos][1], pieceData[index].color, pieceData[index].multiplier);
+          pieceIcons[n] = _placePiece(10, 10, pieceData[n].color, 1);
+
+          return true;
+      }
+    }
+    return false;
   }
 
   void _movePiece(int n){
@@ -138,17 +175,24 @@ class _GameWindowState extends State<GameWindow>{
     if(pieceData[n].atHome == true && diceVal == 6){
       move = 1;
       pieceData[n].atHome = false;
-      _double();
+      if(_double(n)) return;
     }else{
       move = diceVal;
     }
+
+
+    _checkEat(pieceData[n].pos + move);
+
     pieceData[n].steps += move;
     pieceData[n].pos += move;
+
+
+
     pieceData[n].steps == 1 ? pieceData[n].isMine = true : pieceData[n].isMine = false;
     //loop board
     if(pieceData[n].pos > 27) pieceData[n].pos -= 28;
 
-    pieceIcons[n] = _placePiece(board[pieceData[n].pos][0], board[pieceData[n].pos][1], pieceData[n].color);
+    pieceIcons[n] = _placePiece(board[pieceData[n].pos][0], board[pieceData[n].pos][1], pieceData[n].color, pieceData[n].multiplier);
   }
 
   List<bool> legalMoves = [true,true,true,true];
@@ -168,6 +212,7 @@ class _GameWindowState extends State<GameWindow>{
     if(diceVal != 6){
       for(int i = 0; i < 4; i++){
         if(data[i].atHome) legalMoves[i] = false;
+        if(data[i].isInDouble) legalMoves[i] = false;
       }
 
       //test for a friendly piece in the same spot
@@ -175,14 +220,38 @@ class _GameWindowState extends State<GameWindow>{
         int nextPos = data[i].pos + diceVal;
         if(nextPos > 27) nextPos -= 28;
         var samePos = data.where((piece) => piece.pos == nextPos);
-        if(samePos.length > 0) legalMoves[i] = false;
+        if(samePos.isNotEmpty) legalMoves[i] = false;
       }
     }else{
       for(int i = 0; i < 4; i++){
         if(data[i].atHome) legalMoves[i] = true;
+        if(data[i].isInDouble) legalMoves[i] = false;
       }
     }
+  }
 
+  int _getPieceAt(int pos){
+    for(int i = 0; i < 16; i++){
+      if(pieceData[i].pos == pos) return i;
+    }
+    return null;
+  }
+
+  void _checkEat(int pos){
+
+    int index = _getPieceAt(pos);
+    if(index != null){
+      if(pieceData[index].doubleMembers.length > 0){
+
+        for(int i = 0; i < pieceData[index].doubleMembers.length; i++){
+          int pieceId = pieceData[index].doubleMembers[i];
+          pieceData[pieceId].reset();
+          pieceIcons[pieceId] = _placePiece(pieceData[pieceId].homePos[0],pieceData[pieceId].homePos[1], pieceData[pieceId].color,pieceData[pieceId].multiplier);
+        }
+      }
+      pieceData[index].reset();
+      pieceIcons[index] = _placePiece(pieceData[index].homePos[0],pieceData[index].homePos[1], pieceData[index].color,pieceData[index].multiplier);
+    }
   }
 
   void _handleTurn(int idx){
