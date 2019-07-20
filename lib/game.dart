@@ -25,9 +25,14 @@ class _GameWindowState extends State<GameWindow>{
 
   List<Positioned> pieceIcons = new List(16);
   List<PieceData> pieceData = new List(16);
-  //List<List<double>> board = [[10,10],[20,20],[40,40],[60,60],[80,80],[100,100],[120,120],[140,140]];
-  List<List<double>> board = new List(28);
-  List<Positioned> boardIcons = new List(28);
+  List<List<double>> board = new List(28 + 16);
+  List<Positioned> boardIcons = new List(44);
+
+  List<int> goalRed = new List(4);
+  List<int> goalBlue = new List(4);
+  List<int> goalGreen = new List(4);
+  List<int> goalYellow = new List(4);
+
   Turn cur = Turn.RED;
 
 
@@ -37,22 +42,67 @@ class _GameWindowState extends State<GameWindow>{
         //x = sin(i),y = cos(i) => ympyrä
         board[i] = [width/2 - 10 + width/2.5 * cos(i/(28/(2*pi))), width/2 + width/2.5 * sin(i/(28/(2*pi)))];
     }
+    for(int i = 0; i < 16; i++){
 
+      double sideMargin = 50;
+      double topMargin = 40;
+      double pieceSize = 20;
+      double gapSize = 5;
+
+      if( i / 4 < 1){
+        board[i + 28] = [sideMargin + (pieceSize + gapSize) * i, width / 2 ];
+
+      }else if (i / 4 < 2){
+        board[i + 28] = [width / 2 - 10, topMargin + (pieceSize + gapSize) * (i - 3)];
+
+      }else if (i / 4 < 3){
+        board[i + 28] = [width - sideMargin - (pieceSize + gapSize) * (i - 7), width / 2];
+
+      }else if(i / 4 < 4){
+        board[i + 28] = [width / 2 - 10, width - topMargin - (pieceSize + gapSize) * (i - 11)];
+      }
+    }
+  }
+
+  void _initGoal(double width){
+
+  }
+
+  List<Positioned> _createGoalIcons(){
+    List<Positioned> goalIcons = new List(16);
+
+    return goalIcons;
   }
 
   void _createBoardIcons() {
 
-    for(int i = 0; i < 28; i++) {
-      boardIcons[i] = Positioned(
+      Color color = Colors.grey;
+      for(int i = 0; i < 44; i++) {
+
+        if(i >= 28){
+          if((i - 28) / 4 < 1){
+            color = Colors.red;
+          }else if((i - 28) / 4 < 2){
+            color = Colors.indigo;
+          }else if((i - 28) / 4 < 3){
+            color = Colors.green;
+          }else if((i - 28) / 4 < 4){
+            color = Colors.yellow;
+          }
+        }
+
+
+        boardIcons[i] = Positioned(
         top: board[i][1],
         left: board[i][0],
         child:Row(children:
         [
+
+          Text(''),
           Icon(Icons.gps_not_fixed,
-          color: Colors.grey,),
-          Text('$i'),
-      ]),
-    );
+            color: color,),
+        ]),
+      );
     }
   }
 
@@ -71,7 +121,13 @@ class _GameWindowState extends State<GameWindow>{
     //side = rand.nextInt(6) + 1;
   }
 
+  int attempts = 0;
+
   GestureDetector _dice(){
+
+
+    bool canMove = false;
+
     return GestureDetector(
         onLongPressEnd: _longPressEnd,
         onTapUp: _tapUp,
@@ -79,13 +135,28 @@ class _GameWindowState extends State<GameWindow>{
           setState(() {
 
             if(!diceRolled){
+
+
+
               diceVal = rand.nextInt(6) + 1;
-              diceRolled = true;
-              _checkLegalMoves();
+              attempts++;
+
+              if(diceVal != 6 && attempts < 3){
+                canMove = _checkLegalMoves(1);
+                canMove = _checkLegalMoves(2);
+                canMove = _checkLegalMoves(3);
+                canMove = _checkLegalMoves(4);
+                canMove = _checkLegalMoves(5);
+              }else{
+                canMove = true;
+              }
+              diceRolled = canMove;
+
+              _checkLegalMoves(diceVal);
             }else{ //DEBUG poist tää
               diceVal = rand.nextInt(6) + 1;
               diceRolled = true;
-              _checkLegalMoves();
+              _checkLegalMoves(diceVal);
             }
           });
         },
@@ -180,8 +251,8 @@ class _GameWindowState extends State<GameWindow>{
       move = diceVal;
     }
 
-
-    _checkEat(pieceData[n].pos + move);
+    //if true this piece got eaten
+    if(_checkEat(pieceData[n].pos + move, n)) return;
 
     pieceData[n].steps += move;
     pieceData[n].pos += move;
@@ -197,7 +268,7 @@ class _GameWindowState extends State<GameWindow>{
 
   List<bool> legalMoves = [true,true,true,true];
 
-  void _checkLegalMoves(){
+  bool _checkLegalMoves(diceVal){
 
     List<PieceData> data = [];
     List<List<int>> pieces = _findPiece(cur);
@@ -228,6 +299,7 @@ class _GameWindowState extends State<GameWindow>{
         if(data[i].isInDouble) legalMoves[i] = false;
       }
     }
+    return legalMoves.contains(true);
   }
 
   int _getPieceAt(int pos){
@@ -237,34 +309,61 @@ class _GameWindowState extends State<GameWindow>{
     return null;
   }
 
-  void _checkEat(int pos){
+  bool _checkEat(int pos, int n){
 
     int index = _getPieceAt(pos);
     if(index != null){
-      if(pieceData[index].doubleMembers.length > 0){
-
-        for(int i = 0; i < pieceData[index].doubleMembers.length; i++){
-          int pieceId = pieceData[index].doubleMembers[i];
-          pieceData[pieceId].reset();
-          pieceIcons[pieceId] = _placePiece(pieceData[pieceId].homePos[0],pieceData[pieceId].homePos[1], pieceData[pieceId].color,pieceData[pieceId].multiplier);
-        }
+      if(pieceData[index].isMine){
+        print('lol ajoit miinaan');
+        _eatPiece(n);
+        return true;
+      }else{
+        _eatPiece(index);
       }
-      pieceData[index].reset();
-      pieceIcons[index] = _placePiece(pieceData[index].homePos[0],pieceData[index].homePos[1], pieceData[index].color,pieceData[index].multiplier);
     }
+    return false;
+  }
+
+  void _eatPiece(int index){
+    if(pieceData[index].doubleMembers.length > 0){
+
+      for(int i = 0; i < pieceData[index].doubleMembers.length; i++){
+        int pieceId = pieceData[index].doubleMembers[i];
+        pieceData[pieceId].reset();
+        pieceIcons[pieceId] = _placePiece(pieceData[pieceId].homePos[0],pieceData[pieceId].homePos[1], pieceData[pieceId].color,pieceData[pieceId].multiplier);
+      }
+    }
+    pieceData[index].reset();
+    pieceIcons[index] = _placePiece(pieceData[index].homePos[0],pieceData[index].homePos[1], pieceData[index].color,pieceData[index].multiplier);
   }
 
   void _handleTurn(int idx){
 
-    if(cur == Turn.RED){
-      cur = Turn.BLUE;
-    }else if(cur == Turn.BLUE){
-      cur = Turn.GREEN;
-    }else if(cur == Turn.GREEN){
-      cur = Turn.YELLOW;
-    }else if(cur == Turn.YELLOW){
-      cur = Turn.RED;
+    //6 = new turn
+    if(diceVal != 6){
+
+      switch(cur){
+
+        case Turn.RED:
+          cur = Turn.BLUE;
+          break;
+
+        case Turn.BLUE:
+          cur = Turn.GREEN;
+          break;
+
+        case Turn.GREEN:
+          cur = Turn.YELLOW;
+          break;
+
+        case Turn.YELLOW:
+          cur = Turn.RED;
+          break;
+      }
+      attempts = 0;
     }
+
+
 
     if(idx != null) _movePiece(idx);
 
@@ -321,6 +420,7 @@ class _GameWindowState extends State<GameWindow>{
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
 
+
     if(first) {
       _initBoard(width);
       _initPieces(width, height);
@@ -343,7 +443,7 @@ class _GameWindowState extends State<GameWindow>{
 
     //dice
     all.add(Positioned(
-      top: width / 2 - 15,
+      top: width / 2 - 2,
       left: width / 2 - 15,
       child:_dice(),
     ));
