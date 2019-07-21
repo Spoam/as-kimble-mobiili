@@ -40,38 +40,23 @@ class _GameWindowState extends State<GameWindow>{
   void _initBoard(double width){
     for(int i = 0; i < 28; i++){
         //x = sin(i),y = cos(i) => ympyrä
-        board[i] = [width/2 - 10 + width/2.5 * cos(i/(28/(2*pi))), width/2 + width/2.5 * sin(i/(28/(2*pi)))];
+        board[i] = [width/2 + width/2.5 * cos(i/(28/(2*pi))), width/2 + width/2.5 * sin(i/(28/(2*pi)))];
     }
     for(int i = 0; i < 16; i++){
 
-      double sideMargin = 50;
-      double topMargin = 40;
-      double pieceSize = 20;
-      double gapSize = 5;
-
       if( i / 4 < 1){
-        board[i + 28] = [sideMargin + (pieceSize + gapSize) * i, width / 2 ];
+        board[i + 28] = [width / 4 + (pieceSize / sqrt(2) )* i, width / 4  + (pieceSize / sqrt(2)) * i];
 
       }else if (i / 4 < 2){
-        board[i + 28] = [width / 2 - 10, topMargin + (pieceSize + gapSize) * (i - 3)];
+        board[i + 28] = [width - width / 4  - (pieceSize / sqrt(2)) * (i - 4), width / 4  + (pieceSize / sqrt(2)) * (i - 4)];
 
       }else if (i / 4 < 3){
-        board[i + 28] = [width - sideMargin - (pieceSize + gapSize) * (i - 7), width / 2];
+        board[i + 28] = [width - width / 4 - (pieceSize / sqrt(2)) *(i - 8), width - width / 4 - (pieceSize / sqrt(2)) * (i - 8)];
 
       }else if(i / 4 < 4){
-        board[i + 28] = [width / 2 - 10, width - topMargin - (pieceSize + gapSize) * (i - 11)];
+        board[i + 28] = [width / 4 + (pieceSize / sqrt(2)) * (i - 12), width - width / 4 - (pieceSize / sqrt(2)) * (i - 12)];
       }
     }
-  }
-
-  void _initGoal(double width){
-
-  }
-
-  List<Positioned> _createGoalIcons(){
-    List<Positioned> goalIcons = new List(16);
-
-    return goalIcons;
   }
 
   void _createBoardIcons() {
@@ -98,9 +83,10 @@ class _GameWindowState extends State<GameWindow>{
         child:Row(children:
         [
 
-          Text(''),
+          //Text('$i'),
           Icon(Icons.gps_not_fixed,
-            color: color,),
+            color: color,
+            size: pieceSize),
         ]),
       );
     }
@@ -161,8 +147,8 @@ class _GameWindowState extends State<GameWindow>{
           });
         },
         child:Container(
-          width: 30,
-          height: 30,
+          width: pieceSize*1.5,
+          height: pieceSize*1.5,
           decoration: BoxDecoration(
             image: DecorationImage(
               image: AssetImage("res/textures/pips$diceVal.png"),
@@ -173,52 +159,51 @@ class _GameWindowState extends State<GameWindow>{
     );
   }
 
-  Positioned _placePiece(double x, double y,Color col, int multiplier){
+  Positioned _placePiece(double x, double y,Color col, int multiplier,){
     return Positioned(
       top: y,
       left: x,
-      child: (multiplier > 1) ? Icon(Icons.add_circle, color: col) : Icon(Icons.brightness_1, color: col,),
+      child: (multiplier > 1) ? Icon(Icons.add_circle, color: col, size: pieceSize,) : Icon(Icons.brightness_1, color: col, size: pieceSize),
     );
   }
 
 
-  void _initPieces(double width, double height){
-    double topMargin = 10;
-    double sideMargin = 10;
-    double pieceSize = 20;
+  void _initPieces(double width){
+
+    double rowCenter = pieceSize/sqrt(2) * 2 - pieceSize/sqrt(2) / 2;
 
     for(int i = 0; i < 16; i++){
 
       if(i / 4 < 1){
 
-        double x = sideMargin;
-        double y = width / 2 - pieceSize + pieceSize*i;
+        double x = (width / 6) - rowCenter +  (pieceSize / sqrt(2)) * i;
+        double y = (width / 6) + rowCenter - (pieceSize / sqrt(2)) * i;
 
-        pieceIcons[i] = _placePiece(x, y,Colors.red, 1);
-        pieceData[i] = PieceData(14,14,Colors.red,[x ,y]);
+        pieceIcons[i] = _placePiece(x , y ,Colors.red, 1);
+        pieceData[i] = PieceData(17,17,Colors.red,[x ,y]);
 
       }else if(i / 4 < 2){
 
-        double x = width / 2 - 3*pieceSize + pieceSize * (i-3);
-        double y = topMargin;
+        double x = (width - (width / 6))  - rowCenter + (pieceSize / sqrt(2)) * (i - 4);
+        double y = (width / 6)  - rowCenter + (pieceSize / sqrt(2)) * (i - 4);
 
         pieceIcons[i] = _placePiece(x, y, Colors.indigo, 1);
-        pieceData[i] = PieceData(21,21,Colors.indigo, [x ,y]);
+        pieceData[i] = PieceData(24,24,Colors.indigo, [x ,y]);
 
       }else if(i / 4 < 3){
 
-        double x = width - pieceSize - sideMargin;
-        double y =  width / 2 - 2*pieceSize + pieceSize*(i - 7);
+        double x = (width - (width / 6))  - rowCenter + (pieceSize / sqrt(2)) * (i - 8);
+        double y = (width - (width / 6))  + rowCenter - (pieceSize / sqrt(2)) * (i - 8);
 
         pieceIcons[i] = _placePiece(x, y, Colors.green, 1);
-        pieceData[i] = PieceData(0,0,Colors.green, [x ,y]);
+        pieceData[i] = PieceData(3,3,Colors.green, [x ,y]);
       }else if(i / 4 < 4){
 
-        double x = width / 2 - pieceSize*3 + pieceSize*(i-11);
-        double y = width - pieceSize;
+        double x = (width / 6) - rowCenter + (pieceSize / sqrt(2)) * (i - 12);
+        double y = (width - (width / 6)) - rowCenter + (pieceSize / sqrt(2)) * (i - 12);
 
-        pieceIcons[i] = _placePiece(x , y, Colors.yellow, 1);
-        pieceData[i] = PieceData(7,7,Colors.yellow, [x ,y]);
+        pieceIcons[i] = _placePiece(x, y , Colors.yellow, 1);
+        pieceData[i] = PieceData(10,10,Colors.yellow, [x ,y]);
       }
     }
   }
@@ -415,15 +400,18 @@ class _GameWindowState extends State<GameWindow>{
 
   int _radioGroupVal = 3;
 
+  double pieceSize = 20;
+
   Widget build(BuildContext context){
 
-    double width = MediaQuery.of(context).size.width;
-    double height = MediaQuery.of(context).size.height;
+    double width = MediaQuery.of(context).size.width - 20;
+
+    pieceSize = width / 13;
 
 
     if(first) {
       _initBoard(width);
-      _initPieces(width, height);
+      _initPieces(width);
       _createBoardIcons();
       first = false;
     }
@@ -443,8 +431,8 @@ class _GameWindowState extends State<GameWindow>{
 
     //dice
     all.add(Positioned(
-      top: width / 2 - 2,
-      left: width / 2 - 15,
+      top: width / 2 - pieceSize / 4,
+      left: width / 2 - pieceSize / 4,
       child:_dice(),
     ));
 
@@ -508,4 +496,3 @@ class _GameWindowState extends State<GameWindow>{
     );
     }
   }
-
