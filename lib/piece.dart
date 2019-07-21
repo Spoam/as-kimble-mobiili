@@ -12,6 +12,7 @@ class PieceData {
   bool isMine = false;
   int multiplier = 1;
   bool isInDouble = false;
+  bool atGoal = false;
   List<int> doubleMembers = [];
 
   void reset(){
@@ -21,6 +22,7 @@ class PieceData {
     isMine = false;
     multiplier = 1;
     isInDouble = false;
+    atGoal = false;
     doubleMembers.clear();
   }
 
