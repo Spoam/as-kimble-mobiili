@@ -28,50 +28,28 @@ class _GameWindowState extends State<GameWindow> {
   List<List<double>> board = new List(28 + 16);
   List<Positioned> boardIcons = new List(44);
 
-  List<List<int>> goals = List(4);
-
-  List<int> goalRed = new List(4);
-  List<int> goalBlue = new List(4);
-  List<int> goalGreen = new List(4);
-  List<int> goalYellow = new List(4);
-
   Turn cur = Turn.RED;
 
 
   void _initBoard(double width) {
     for (int i = 0; i < 28; i++) {
       //x = sin(i),y = cos(i) => ympyrä
-      board[i] = [
-        width / 2 + width / 2.5 * cos(i / (28 / (2 * pi))),
-        width / 2 + width / 2.5 * sin(i / (28 / (2 * pi)))
+      board[i] = [width / 2 + width / 2.5 * cos(i / (28 / (2 * pi))), width / 2 + width / 2.5 * sin(i / (28 / (2 * pi)))
       ];
     }
     for (int i = 0; i < 16; i++) {
       if (i / 4 < 1) {
-        board[i + 28] = [
-          width / 4 + (pieceSize / sqrt(2)) * i,
-          width / 4 + (pieceSize / sqrt(2)) * i
-        ];
+        board[i + 28] = [width / 4 + (pieceSize / sqrt(2)) * i, width / 4 + (pieceSize / sqrt(2)) * i];
       } else if (i / 4 < 2) {
-        board[i + 28] = [
-          width - width / 4 - (pieceSize / sqrt(2)) * (i - 4),
-          width / 4 + (pieceSize / sqrt(2)) * (i - 4)
+        board[i + 28] = [width - width / 4 - (pieceSize / sqrt(2)) * (i - 4), width / 4 + (pieceSize / sqrt(2)) * (i - 4)
         ];
       } else if (i / 4 < 3) {
-        board[i + 28] = [
-          width - width / 4 - (pieceSize / sqrt(2)) * (i - 8),
-          width - width / 4 - (pieceSize / sqrt(2)) * (i - 8)
+        board[i + 28] = [width - width / 4 - (pieceSize / sqrt(2)) * (i - 8), width - width / 4 - (pieceSize / sqrt(2)) * (i - 8)
         ];
       } else if (i / 4 < 4) {
-        board[i + 28] = [
-          width / 4 + (pieceSize / sqrt(2)) * (i - 12),
-          width - width / 4 - (pieceSize / sqrt(2)) * (i - 12)
+        board[i + 28] = [width / 4 + (pieceSize / sqrt(2)) * (i - 12), width - width / 4 - (pieceSize / sqrt(2)) * (i - 12)
         ];
       }
-    }
-
-    for (int i = 0; i < 4; i++) {
-      goals[i] = [null, null, null, null];
     }
   }
 
@@ -90,13 +68,11 @@ class _GameWindowState extends State<GameWindow> {
         }
       }
 
-
       boardIcons[i] = Positioned(
         top: board[i][1],
         left: board[i][0],
         child: Row(children:
         [
-
           //Text('$i'),
           Icon(Icons.gps_not_fixed,
               color: color,
@@ -108,9 +84,7 @@ class _GameWindowState extends State<GameWindow> {
 
   int diceVal = 1;
 
-  Random rand = Random(DateTime
-      .now()
-      .microsecond);
+  Random rand = Random(DateTime.now().microsecond);
 
   bool diceRolled = false;
 
@@ -127,7 +101,6 @@ class _GameWindowState extends State<GameWindow> {
   int attempts = 0;
 
   GestureDetector _dice() {
-    bool canMove = false;
 
     return GestureDetector(
         onLongPressEnd: _longPressEnd,
@@ -138,16 +111,18 @@ class _GameWindowState extends State<GameWindow> {
               diceVal = rand.nextInt(6) + 1;
               attempts++;
 
+              diceRolled = false;
+
               if (diceVal != 6 && attempts < 3) {
-                canMove = _checkLegalMoves(1);
-                canMove = _checkLegalMoves(2);
-                canMove = _checkLegalMoves(3);
-                canMove = _checkLegalMoves(4);
-                canMove = _checkLegalMoves(5);
+                if(_checkLegalMoves(1)) diceRolled = true;
+                if(_checkLegalMoves(2)) diceRolled = true;
+                if(_checkLegalMoves(3)) diceRolled = true;
+                if(_checkLegalMoves(4)) diceRolled = true;
+                if(_checkLegalMoves(5)) diceRolled = true;
               } else {
-                canMove = true;
+                diceRolled = true;
               }
-              diceRolled = canMove;
+
 
               _checkLegalMoves(diceVal);
 
@@ -206,29 +181,25 @@ class _GameWindowState extends State<GameWindow> {
         double y = (width / 6) + rowCenter - (pieceSize / sqrt(2)) * i;
 
         pieceIcons[i] = _placePiece(x, y, Colors.red, 1);
-        pieceData[i] = PieceData(17, 17, Colors.red, [x, y]);
+        pieceData[i] = PieceData(17, Colors.red, [x, y]);
       } else if (i / 4 < 2) {
-        double x = (width - (width / 6)) - rowCenter +
-            (pieceSize / sqrt(2)) * (i - 4);
+        double x = (width - (width / 6)) - rowCenter + (pieceSize / sqrt(2)) * (i - 4);
         double y = (width / 6) - rowCenter + (pieceSize / sqrt(2)) * (i - 4);
 
         pieceIcons[i] = _placePiece(x, y, Colors.indigo, 1);
-        pieceData[i] = PieceData(24, 24, Colors.indigo, [x, y]);
+        pieceData[i] = PieceData(24, Colors.indigo, [x, y]);
       } else if (i / 4 < 3) {
-        double x = (width - (width / 6)) - rowCenter +
-            (pieceSize / sqrt(2)) * (i - 8);
-        double y = (width - (width / 6)) + rowCenter -
-            (pieceSize / sqrt(2)) * (i - 8);
+        double x = (width - (width / 6)) - rowCenter + (pieceSize / sqrt(2)) * (i - 8);
+        double y = (width - (width / 6)) + rowCenter - (pieceSize / sqrt(2)) * (i - 8);
 
         pieceIcons[i] = _placePiece(x, y, Colors.green, 1);
-        pieceData[i] = PieceData(3, 3, Colors.green, [x, y]);
+        pieceData[i] = PieceData(3, Colors.green, [x, y]);
       } else if (i / 4 < 4) {
         double x = (width / 6) - rowCenter + (pieceSize / sqrt(2)) * (i - 12);
-        double y = (width - (width / 6)) - rowCenter +
-            (pieceSize / sqrt(2)) * (i - 12);
+        double y = (width - (width / 6)) - rowCenter + (pieceSize / sqrt(2)) * (i - 12);
 
         pieceIcons[i] = _placePiece(x, y, Colors.yellow, 1);
-        pieceData[i] = PieceData(10, 10, Colors.yellow, [x, y]);
+        pieceData[i] = PieceData(10, Colors.yellow, [x, y]);
       }
     }
   }
@@ -241,6 +212,7 @@ class _GameWindowState extends State<GameWindow> {
         pieceData[index].doubleMembers.add(n);
         pieceData[n].reset();
         pieceData[n].isInDouble = true;
+        pieceData[n].atHome = false;
 
         pieceIcons[index] = _placePiece(board[pieceData[index].pos][0], board[pieceData[index].pos][1], pieceData[index].color, pieceData[index].multiplier);
         pieceIcons[n] = _placePiece(10, 10, pieceData[n].color, 1);
@@ -254,6 +226,7 @@ class _GameWindowState extends State<GameWindow> {
   void _movePiece(int n) {
     int move = 0;
     if (pieceData[n].atHome == true && diceVal == 6) {
+      pieceData[n].pos = pieceData[n].startPos;
       move = 1;
       pieceData[n].atHome = false;
       if (_double(n)) return;
@@ -267,11 +240,18 @@ class _GameWindowState extends State<GameWindow> {
     //entering goal
     if (pieceData[n].steps + move > 28) {
       if (pieceData[n].atGoal) {
-        goals[cur.index][pieceData[n].steps - 29] = null;
+        pieceData[n].multiplier = 1;
+      }else {
+        for(int i = 0; i < pieceData[n].doubleMembers.length; i++){
+          int id = pieceData[n].doubleMembers[i];
+          pieceData[id].pos = 28 + cur.index * 4;
+          pieceData[id].steps = 29;
+          pieceData[id].isInDouble = false;
+          pieceIcons[id] = _placePiece(board[pieceData[id].pos][0], board[pieceData[id].pos][1], pieceData[n].color, 1);
+        }
+        pieceData[n].atGoal = true;
+        pieceData[n].doubleMembers.clear();
       }
-
-      goals[cur.index][pieceData[n].steps + move - 29] = n;
-      pieceData[n].atGoal = true;
     }
 
     pieceData[n].steps += move;
@@ -285,9 +265,7 @@ class _GameWindowState extends State<GameWindow> {
     if (pieceData[n].atGoal) {
       pieceData[n].pos = pieceData[n].steps + 4 * cur.index - 1;
     }
-    pieceIcons[n] = _placePiece(
-        board[pieceData[n].pos][0], board[pieceData[n].pos][1],
-        pieceData[n].color, pieceData[n].multiplier);
+    pieceIcons[n] = _placePiece(board[pieceData[n].pos][0], board[pieceData[n].pos][1], pieceData[n].color, pieceData[n].multiplier);
   }
 
   List<bool> legalMoves = [true, true, true, true];
@@ -302,10 +280,18 @@ class _GameWindowState extends State<GameWindow> {
 
     legalMoves.setAll(0, [true, true, true, true]);
 
+    print('checking moves...');
+
     if (diceVal != 6) {
       for (int i = 0; i < 4; i++) {
-        if (data[i].atHome) legalMoves[i] = false;
-        if (data[i].isInDouble) legalMoves[i] = false;
+        if (data[i].atHome) {
+          legalMoves[i] = false;
+          print('piece $i can\'t move because it\'s at home ');
+        }
+          if (data[i].isInDouble){
+          print('piece $i can\'t move because it\'s in double');
+          legalMoves[i] = false;
+        }
       }
 
 
@@ -314,26 +300,33 @@ class _GameWindowState extends State<GameWindow> {
         int nextPos = data[i].pos + diceVal;
         if (nextPos > 27) nextPos -= 28;
         var samePos = data.where((piece) => piece.pos == nextPos);
-        if (samePos.isNotEmpty) legalMoves[i] = false;
+        if (samePos.isNotEmpty){
+          print('piece $i can\'t move because another piece is blocking it ');
+          legalMoves[i] = false;
+        }
       }
     } else {
       for (int i = 0; i < 4; i++) {
         if (data[i].atHome) legalMoves[i] = true;
-        if (data[i].isInDouble) legalMoves[i] = false;
+        if (data[i].isInDouble){
+          print('piece $i can\'t move because it\'s in double ');
+          legalMoves[i] = false;
+        }
       }
     }
 
     for (int i = 0; i < 4; i++) {
       if (data[i].steps + diceVal > 28) {
-
-        print(data[i].steps + diceVal - 29);
         if(data[i].steps + diceVal <= 32){
-          if (goals[cur.index][data[i].steps + diceVal - 29] == null) {
-            legalMoves[i] = true;
-          }else{
+          var samePos = data.where((piece) => piece.pos ==  data[i].steps + diceVal + cur.index * 4 - 1);
+          if (samePos.isNotEmpty) {
+            print('piece $i can\'t move because another piece blocks it at goal');
             legalMoves[i] = false;
+          }else{
+            legalMoves[i] = true;
           }
         }else{
+          print('piece $i can\'t move because it\'s at end of goal');
           legalMoves[i] = false;
         }
       }
@@ -350,13 +343,16 @@ class _GameWindowState extends State<GameWindow> {
 
   bool _checkEat(int pos, int n){
 
+    if(pos >= 28) pos -= 28;
     int index = _getPieceAt(pos);
     if(index != null){
+      print('eating piece $index');
       if(pieceData[index].isMine){
         print('lol ajoit miinaan');
         _eatPiece(n);
         return true;
       }else{
+        print('ate piece $index');
         _eatPiece(index);
       }
     }

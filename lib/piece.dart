@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 class PieceData {
 
-  PieceData(this.pos,this.startPos,this.color,this.homePos);
+  PieceData(this.startPos,this.color,this.homePos);
   final Color color;
   int steps = 0;
-  int pos;
+  int pos = -1;
   final int startPos;
   final List<double> homePos;
   bool atHome = true;
@@ -17,7 +17,7 @@ class PieceData {
 
   void reset(){
     steps = 0;
-    pos = startPos;
+    pos = -1;
     atHome = true;
     isMine = false;
     multiplier = 1;
