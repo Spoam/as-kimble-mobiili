@@ -37,8 +37,6 @@ class MainMenu extends StatefulWidget {
 
 class _MainMenuState extends State<MainMenu> {
 
-  int _counter = 0;
-
   @override
   Widget build(BuildContext context){
 
@@ -54,7 +52,6 @@ class _MainMenuState extends State<MainMenu> {
               },
             child:Text('Aloita peli'),
         ),
-
 
       ),
 

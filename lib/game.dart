@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:kimble/dice.dart';
 import 'package:kimble/piece.dart';
 import 'dart:math';
 import 'dart:core';
+import 'package:kimble/player.dart';
 
 enum Turn{
   RED,
@@ -28,27 +28,30 @@ class _GameWindowState extends State<GameWindow> {
   List<List<double>> board = new List(28 + 16);
   List<Positioned> boardIcons = new List(44);
 
+  Player PlayerRed = Player('punainen',Colors.red);
+  Player PlayerBlue = Player('sininen', Colors.indigo);
+  Player PlayerGreen = Player('vihreä', Colors.green);
+  Player PlayerYellow = Player('keltainen', Colors.yellow);
+
+
+
   Turn cur = Turn.RED;
 
 
   void _initBoard(double width) {
     for (int i = 0; i < 28; i++) {
       //x = sin(i),y = cos(i) => ympyrä
-      board[i] = [width / 2 + width / 2.5 * cos(i / (28 / (2 * pi))), width / 2 + width / 2.5 * sin(i / (28 / (2 * pi)))
-      ];
+      board[i] = [width / 2 + width / 2.5 * cos(i / (28 / (2 * pi))), width / 2 + width / 2.5 * sin(i / (28 / (2 * pi)))];
     }
     for (int i = 0; i < 16; i++) {
       if (i / 4 < 1) {
         board[i + 28] = [width / 4 + (pieceSize / sqrt(2)) * i, width / 4 + (pieceSize / sqrt(2)) * i];
       } else if (i / 4 < 2) {
-        board[i + 28] = [width - width / 4 - (pieceSize / sqrt(2)) * (i - 4), width / 4 + (pieceSize / sqrt(2)) * (i - 4)
-        ];
+        board[i + 28] = [width - width / 4 - (pieceSize / sqrt(2)) * (i - 4), width / 4 + (pieceSize / sqrt(2)) * (i - 4)];
       } else if (i / 4 < 3) {
-        board[i + 28] = [width - width / 4 - (pieceSize / sqrt(2)) * (i - 8), width - width / 4 - (pieceSize / sqrt(2)) * (i - 8)
-        ];
+        board[i + 28] = [width - width / 4 - (pieceSize / sqrt(2)) * (i - 8), width - width / 4 - (pieceSize / sqrt(2)) * (i - 8)];
       } else if (i / 4 < 4) {
-        board[i + 28] = [width / 4 + (pieceSize / sqrt(2)) * (i - 12), width - width / 4 - (pieceSize / sqrt(2)) * (i - 12)
-        ];
+        board[i + 28] = [width / 4 + (pieceSize / sqrt(2)) * (i - 12), width - width / 4 - (pieceSize / sqrt(2)) * (i - 12)];
       }
     }
   }
@@ -152,9 +155,10 @@ class _GameWindowState extends State<GameWindow> {
             width: pieceSize * 1.5,
             height: pieceSize * 1.5,
             decoration: BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(5)),
                 image: DecorationImage(
                   image: AssetImage("res/textures/pips$diceVal.png"),
-                  fit: BoxFit.cover,
+                  fit: BoxFit.fill,
                 )
             )
         )
@@ -294,7 +298,6 @@ class _GameWindowState extends State<GameWindow> {
         }
       }
 
-
       //test for a friendly piece in the same spot
       for (int i = 0; i < 4; i++) {
         int nextPos = data[i].pos + diceVal;
@@ -305,6 +308,7 @@ class _GameWindowState extends State<GameWindow> {
           legalMoves[i] = false;
         }
       }
+      //when dice value is 6
     } else {
       for (int i = 0; i < 4; i++) {
         if (data[i].atHome) legalMoves[i] = true;
@@ -349,17 +353,17 @@ class _GameWindowState extends State<GameWindow> {
       print('eating piece $index');
       if(pieceData[index].isMine){
         print('lol ajoit miinaan');
-        _eatPiece(n);
+        _eatPiece(n, pieceData[index].multiplier);
         return true;
       }else{
         print('ate piece $index');
-        _eatPiece(index);
+        _eatPiece(index, pieceData[n].multiplier);
       }
     }
     return false;
   }
 
-  void _eatPiece(int index){
+  void _eatPiece(int index, int eaterMultiplier){
     if(pieceData[index].doubleMembers.length > 0){
 
       for(int i = 0; i < pieceData[index].doubleMembers.length; i++){
@@ -368,6 +372,9 @@ class _GameWindowState extends State<GameWindow> {
         pieceIcons[pieceId] = _placePiece(pieceData[pieceId].homePos[0],pieceData[pieceId].homePos[1], pieceData[pieceId].color,pieceData[pieceId].multiplier);
       }
     }
+
+    getPlayerByColor(pieceData[index].color).drinks += eaterMultiplier * pieceData[index].multiplier;
+
     pieceData[index].reset();
     pieceIcons[index] = _placePiece(pieceData[index].homePos[0],pieceData[index].homePos[1], pieceData[index].color,pieceData[index].multiplier);
   }
@@ -383,18 +390,22 @@ class _GameWindowState extends State<GameWindow> {
 
         case Turn.RED:
           cur = Turn.BLUE;
+          bgColor = Colors.indigo;
           break;
 
         case Turn.BLUE:
           cur = Turn.GREEN;
+          bgColor = Colors.green;
           break;
 
         case Turn.GREEN:
           cur = Turn.YELLOW;
+          bgColor = Colors.yellow;
           break;
 
         case Turn.YELLOW:
           cur = Turn.RED;
+          bgColor = Colors.red;
           break;
       }
       attempts = 0;
@@ -440,11 +451,28 @@ class _GameWindowState extends State<GameWindow> {
     return order;
   }
 
+  Player getPlayerByColor(Color color){
+    if(color == Colors.red){
+      return PlayerRed;
+    }else if(color == Colors.indigo){
+      return PlayerBlue;
+    }else if(color == Colors.green){
+      return PlayerGreen;
+    }else if(color == Colors.yellow){
+      return PlayerYellow;
+    }
+    return null;
+  }
+
   bool first = true;
+
+  bool  raise = false;
 
   int _radioGroupVal = -1;
 
   double pieceSize = 20;
+
+  Color bgColor = Colors.red;
 
   Widget build(BuildContext context){
 
@@ -465,8 +493,12 @@ class _GameWindowState extends State<GameWindow> {
     List<Widget> all = [];
     //board
     all.add(Container(
-      margin: const EdgeInsets.all(10.0),
-      color: Colors.lightBlueAccent,
+      margin: const EdgeInsets.fromLTRB(10,10,10,5),
+      decoration : BoxDecoration(
+        color: Colors.lightBlueAccent,
+        borderRadius: BorderRadius.all(Radius.circular(pieceSize * 2)),
+      ),
+
       width: width,
       height: width,
     ));
@@ -482,60 +514,197 @@ class _GameWindowState extends State<GameWindow> {
     ));
 
     return Scaffold(
+        backgroundColor: bgColor,
         body:ListView(
           children:[
             Stack(
               children:all,
             ),
-            Row(
-              children: <Widget>[
-                legalMoves[0] ? Radio(
-                value: 0,
-                  groupValue: _radioGroupVal,
-                  onChanged: _handleRadioValueChange,
-                ) : Container(),
-                legalMoves[0] ? Text('Vika') : Text(''),
 
-                legalMoves[1] ? Radio(
-                  value: 1,
-                  groupValue: _radioGroupVal,
-                  onChanged: _handleRadioValueChange,
-                ) : Container(),
-                legalMoves[1] ? Text('Kolmas') : Text(''),
+            legalMoves.contains(true) ? Container(
+              margin: const EdgeInsets.fromLTRB(10,5,10,5),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+              ),
+              child:Row(
+                children: <Widget>[
+                  legalMoves[0] ? Radio(
+                  value: 0,
+                    groupValue: _radioGroupVal,
+                    onChanged: _handleRadioValueChange,
+                  ) : Container(),
+                  legalMoves[0] ? Text('Vika') : Text(''),
 
-                legalMoves[2] ? Radio(
-                  value: 2,
-                  groupValue: _radioGroupVal,
-                  onChanged: _handleRadioValueChange,
-                ) : Container(),
-                legalMoves[2] ? Text('Toka') : Text(''),
+                  legalMoves[1] ? Radio(
+                    value: 1,
+                    groupValue: _radioGroupVal,
+                    onChanged: _handleRadioValueChange,
+                  ) : Container(),
+                  legalMoves[1] ? Text('Kolmas') : Text(''),
 
-                legalMoves[3] ? Radio(
-                  value: 3,
-                  groupValue: _radioGroupVal,
-                  onChanged: _handleRadioValueChange,
-                ) : Container(),
-                legalMoves[3] ? Text('Kärki') : Text(''),
-              ],
+                  legalMoves[2] ? Radio(
+                    value: 2,
+                    groupValue: _radioGroupVal,
+                    onChanged: _handleRadioValueChange,
+                  ) : Container(),
+                  legalMoves[2] ? Text('Toka') : Text(''),
 
-            ),
-            diceRolled ?  RaisedButton(
-              onPressed: (){
-                setState(() {
-                  if(legalMoves.contains(true)) {
-                    _handleTurn(selectedPiece);
-                  }else{
-                    _handleTurn(null);
-                  }
-                });
-              },
-              child:Text('Liiku/Lopeta vuoro')
+                  legalMoves[3] ? Radio(
+                    value: 3,
+                    groupValue: _radioGroupVal,
+                    onChanged: _handleRadioValueChange,
+                  ) : Container(),
+                  legalMoves[3] ? Text('Kärki') : Text(''),
+                ],
+
+              ),
+            ): Container(),
+
+            diceRolled ? Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+                children:[
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(10,5,2.5,5),
+                    width: width / 2 - 20,
+                    decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.all(Radius.circular(10)),
+                        boxShadow:[
+                          BoxShadow(
+                              color: Colors.black54,
+                              offset: Offset(1,1),
+                              blurRadius: 0.5,
+                              spreadRadius: 0.5
+                          ),]
+                    ),
+                    child: MaterialButton(
+                      onPressed: (){
+                        setState(() {
+                          if(legalMoves.contains(true)) {
+                            _handleTurn(selectedPiece);
+                          }else{
+                            _handleTurn(null);
+                          }
+                        });
+                      },
+                      child: Text('Liiku'),
+                    ),
+                  ),
+                  raise ? Container(
+                    margin: const EdgeInsets.fromLTRB(2.5,5,10,5),
+                    width: width / 2 - 20,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+
+                    ),
+                    child: MaterialButton(
+                      onPressed: (){
+                        setState(() {
+                          if(legalMoves.contains(true)) {
+                            _handleTurn(selectedPiece);
+                          }else{
+                            _handleTurn(null);
+                          }
+                        });
+                      },
+                      child: Text('Korota'),
+                    ),
+                  ) : Container(),
+                ]
             ) : Container(),
 
-            Text('$cur'),
-            Text('$selectedPiece'),
+            //player info starts
+            Container(
+              margin: const EdgeInsets.fromLTRB(10,5,10,5),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+              ),
+              child:Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children:[
+                  Row(
+                      children:PlayerRed.getPlayerInfo(pieceSize),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.plus_one,size: pieceSize),
+                    onPressed: (){
+                      setState((){
+                        PlayerRed.drunk++;
+                      });
+                    },
+                  )
+                ]
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.fromLTRB(10,5,10,5),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+              ),
+              child:Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children:[
+                  Row(children:PlayerBlue.getPlayerInfo(pieceSize)),
+                  IconButton(
+                    icon: Icon(Icons.plus_one,size: pieceSize),
+                    onPressed: (){
+                      setState((){
+                        PlayerBlue.drunk++;
+                      });
+                    },
+                  )
+                ]
+              ),
+            ),
 
+            Container(
+              margin: const EdgeInsets.fromLTRB(10,5,10,5),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+              ),
+              child:Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children:[
+                  Row(children:PlayerGreen.getPlayerInfo(pieceSize)),
+                  IconButton(
+                    icon: Icon(Icons.plus_one,size: pieceSize),
+                    onPressed: (){
+                      setState((){
+                        PlayerGreen.drunk++;
+                      });
+                    },
+                  )
+                ]
+              ),
+            ),
+           Container(
+             margin: const EdgeInsets.fromLTRB(10,5,10,5),
+             decoration: BoxDecoration(
+               color: Colors.white,
+               borderRadius: BorderRadius.all(Radius.circular(10)),
+             ),
+             child:Row(
+                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children:[
+                  Row(children:PlayerYellow.getPlayerInfo(pieceSize)),
+                  IconButton(
+                    icon: Icon(Icons.plus_one,size: pieceSize),
+                    onPressed: (){
+                      setState((){
+                        PlayerYellow.drunk++;
+                      });
+                    },
+                  )
+                ]
+            )
+           ),
           ],
+
         )
     );
     }
