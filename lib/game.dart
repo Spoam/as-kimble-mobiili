@@ -85,6 +85,7 @@ class _GameWindowState extends State<GameWindow> {
     }
   }
 
+
   int diceVal = 1;
 
   Random rand = Random(DateTime.now().microsecond);
@@ -126,15 +127,14 @@ class _GameWindowState extends State<GameWindow> {
                 diceRolled = true;
               }
 
-
               _checkLegalMoves(diceVal);
 
               //set selected piece to first movable
               int idx = legalMoves.reversed.toList().indexOf(true);
               if(idx != -1){
                 _handleRadioValueChange(3 - idx);
-              }else{
-                selectedPiece = null;
+              }else if(diceRolled){
+                _handleTurn(null);
               }
 
             } else { //DEBUG poist tää
@@ -146,7 +146,7 @@ class _GameWindowState extends State<GameWindow> {
               if(idx != -1){
                 _handleRadioValueChange(idx);
               }else{
-                selectedPiece = null;
+                selectedPiece = null;;
               }
             }
           });
@@ -272,7 +272,7 @@ class _GameWindowState extends State<GameWindow> {
     pieceIcons[n] = _placePiece(board[pieceData[n].pos][0], board[pieceData[n].pos][1], pieceData[n].color, pieceData[n].multiplier);
   }
 
-  List<bool> legalMoves = [true, true, true, true];
+  List<bool> legalMoves = [false, false, false, false];
 
   bool _checkLegalMoves(diceVal) {
     List<PieceData> data = [];
@@ -336,6 +336,25 @@ class _GameWindowState extends State<GameWindow> {
       }
     }
     return legalMoves.contains(true);
+  }
+
+  void raise(){
+    getCurrentPlayer().raises++;
+  }
+
+  //täst enumist on enmmän haittaa ku hyötyä
+  Player getCurrentPlayer(){
+    switch(cur){
+      case Turn.RED:
+        return getPlayerByColor(Colors.red);
+      case Turn.BLUE:
+        return getPlayerByColor(Colors.indigo);
+      case Turn.GREEN:
+        return getPlayerByColor(Colors.green);
+      case Turn.YELLOW:
+        return getPlayerByColor(Colors.yellow);
+        break;
+    }
   }
 
   int _getPieceAt(int pos){
@@ -413,6 +432,11 @@ class _GameWindowState extends State<GameWindow> {
 
     diceRolled = false;
 
+    //cosmetic. hides piece selection before dice is rolled
+    setState((){
+      legalMoves.setAll(0, [false, false, false, false]);
+    });
+
   }
 
   int selectedPiece;
@@ -466,7 +490,7 @@ class _GameWindowState extends State<GameWindow> {
 
   bool first = true;
 
-  bool  raise = false;
+  bool  canRaise = true;
 
   int _radioGroupVal = -1;
 
@@ -561,10 +585,10 @@ class _GameWindowState extends State<GameWindow> {
               ),
             ): Container(),
 
-            diceRolled ? Row(
+            Row(
               mainAxisAlignment: MainAxisAlignment.center,
                 children:[
-                  Container(
+                  diceRolled ?  Container(
                     margin: const EdgeInsets.fromLTRB(10,5,2.5,5),
                     width: width / 2 - 20,
                     decoration: BoxDecoration(
@@ -590,30 +614,32 @@ class _GameWindowState extends State<GameWindow> {
                       },
                       child: Text('Liiku'),
                     ),
-                  ),
-                  raise ? Container(
+                  ) : Container(),
+                  canRaise ? Container(
                     margin: const EdgeInsets.fromLTRB(2.5,5,10,5),
                     width: width / 2 - 20,
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.all(Radius.circular(10)),
-
+                        boxShadow:[
+                          BoxShadow(
+                              color: Colors.black54,
+                              offset: Offset(1,1),
+                              blurRadius: 0.5,
+                              spreadRadius: 0.5
+                          ),]
                     ),
                     child: MaterialButton(
                       onPressed: (){
                         setState(() {
-                          if(legalMoves.contains(true)) {
-                            _handleTurn(selectedPiece);
-                          }else{
-                            _handleTurn(null);
-                          }
+                          raise();
                         });
                       },
                       child: Text('Korota'),
                     ),
                   ) : Container(),
                 ]
-            ) : Container(),
+            ),
 
             //player info starts
             Container(
