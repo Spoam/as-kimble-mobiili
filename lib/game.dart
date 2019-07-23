@@ -127,9 +127,9 @@ class _GameWindowState extends State<GameWindow> {
               _checkLegalMoves(diceVal);
 
               //set selected piece to first movable
-              int idx = legalMoves.indexOf(true);
+              int idx = legalMoves.reversed.toList().indexOf(true);
               if(idx != -1){
-                _handleRadioValueChange(idx);
+                _handleRadioValueChange(3 - idx);
               }else{
                 selectedPiece = null;
               }
@@ -404,7 +404,7 @@ class _GameWindowState extends State<GameWindow> {
 
   }
 
-  int selectedPiece = 0;
+  int selectedPiece;
 
   void _handleRadioValueChange(int value) {
     setState(() {
@@ -442,7 +442,7 @@ class _GameWindowState extends State<GameWindow> {
 
   bool first = true;
 
-  int _radioGroupVal = 3;
+  int _radioGroupVal = -1;
 
   double pieceSize = 20;
 
