@@ -20,7 +20,7 @@ class Player{
       ];
 
       for(int i = 0; i < raises; i++){
-        info.add(Icon(Icons.star, color: Colors.amber, size: pieceSize/2));
+        info.add(Icon(Icons.star, color: Colors.amber, size: pieceSize/1.5));
       }
 
       return info;

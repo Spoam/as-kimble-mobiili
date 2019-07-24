@@ -123,10 +123,11 @@ class _GameWindowState extends State<GameWindow> {
                 if(_checkLegalMoves(3)) diceRolled = true;
                 if(_checkLegalMoves(4)) diceRolled = true;
                 if(_checkLegalMoves(5)) diceRolled = true;
+                canRaise = false;
               } else {
                 diceRolled = true;
               }
-
+              if(diceVal == 6)_checkRaise();
               _checkLegalMoves(diceVal);
 
               //set selected piece to first movable
@@ -146,7 +147,7 @@ class _GameWindowState extends State<GameWindow> {
               if(idx != -1){
                 _handleRadioValueChange(idx);
               }else{
-                selectedPiece = null;;
+                selectedPiece = null;
               }
             }
           });
@@ -165,7 +166,8 @@ class _GameWindowState extends State<GameWindow> {
     );
   }
 
-  Positioned _placePiece(double x, double y, Color col, int multiplier,) {
+  Widget _placePiece(double x, double y, Color col, int multiplier,) {
+
     return Positioned(
       top: y,
       left: x,
@@ -214,12 +216,13 @@ class _GameWindowState extends State<GameWindow> {
       if (pieceData[n].color == pieceData[index].color) {
         pieceData[index].multiplier++;
         pieceData[index].doubleMembers.add(n);
-        pieceData[n].reset();
         pieceData[n].isInDouble = true;
         pieceData[n].atHome = false;
+        pieceData[n].steps  = -1;
+        pieceData[n].pos = -1;
 
         pieceIcons[index] = _placePiece(board[pieceData[index].pos][0], board[pieceData[index].pos][1], pieceData[index].color, pieceData[index].multiplier);
-        pieceIcons[n] = _placePiece(10, 10, pieceData[n].color, 1);
+        pieceIcons[n] = _placePiece(30, 30,Colors.lightBlueAccent, 1);
 
         return true;
       }
@@ -227,7 +230,7 @@ class _GameWindowState extends State<GameWindow> {
     return false;
   }
 
-  void _movePiece(int n) {
+  void _movePiece(int n, int diceVal) {
     int move = 0;
     if (pieceData[n].atHome == true && diceVal == 6) {
       pieceData[n].pos = pieceData[n].startPos;
@@ -238,8 +241,7 @@ class _GameWindowState extends State<GameWindow> {
       move = diceVal;
     }
 
-    //if true this piece got eaten
-    if (_checkEat(pieceData[n].pos + move, n)) return;
+
 
     //entering goal
     if (pieceData[n].steps + move > 28) {
@@ -258,12 +260,16 @@ class _GameWindowState extends State<GameWindow> {
       }
     }
 
+    if(!pieceData[n].atGoal){
+      //if true this piece got eaten
+      if (_checkEat(pieceData[n].pos + move, n)) return;
+    }
+
     pieceData[n].steps += move;
     pieceData[n].pos += move;
 
 
-    pieceData[n].steps == 1 ? pieceData[n].isMine = true : pieceData[n].isMine =
-    false;
+    pieceData[n].steps == 1 ? pieceData[n].isMine = true : pieceData[n].isMine = false;
     //loop board
     if (pieceData[n].pos > 27 && !pieceData[n].atGoal) pieceData[n].pos -= 28;
     if (pieceData[n].atGoal) {
@@ -273,6 +279,7 @@ class _GameWindowState extends State<GameWindow> {
   }
 
   List<bool> legalMoves = [false, false, false, false];
+  List<bool> canDouble = [false, false, false, false];
 
   bool _checkLegalMoves(diceVal) {
     List<PieceData> data = [];
@@ -283,6 +290,7 @@ class _GameWindowState extends State<GameWindow> {
     data.add(pieceData[pieces[3][1]]);
 
     legalMoves.setAll(0, [true, true, true, true]);
+    canDouble.setAll(0, [false, false, false, false]);
 
     print('checking moves...');
 
@@ -310,8 +318,12 @@ class _GameWindowState extends State<GameWindow> {
       }
       //when dice value is 6
     } else {
+
       for (int i = 0; i < 4; i++) {
-        if (data[i].atHome) legalMoves[i] = true;
+        if (data[i].atHome){
+          if(data.where((piece) => piece.steps == 1).isNotEmpty) canDouble[i] = true;
+          legalMoves[i] = true;
+        }
         if (data[i].isInDouble){
           print('piece $i can\'t move because it\'s in double ');
           legalMoves[i] = false;
@@ -338,8 +350,56 @@ class _GameWindowState extends State<GameWindow> {
     return legalMoves.contains(true);
   }
 
+  bool _checkRaise(){
+
+    canRaise = true;
+
+
+   //cant' raise if raising player has any pieces at home
+    List<List<int>> curPieces = _findPiece(cur);
+    for(int i = 0; i < curPieces.length; i++){
+      if(pieceData[curPieces[i][1]].atHome) canRaise = false;
+    }
+
+    bool redGoal = false;
+    bool blueGoal = false;
+    bool greenGoal = false;
+    bool yellowGoal = false;
+
+
+    for(int i = 0; i < 16; i++){
+      PieceData p = pieceData[i];
+      if(p.color == Colors.red && p.steps > 28) redGoal = true;
+      if(p.color == Colors.indigo && p.steps > 28) blueGoal = true;
+      if(p.color == Colors.green && p.steps > 28) greenGoal = true;
+      if(p.color == Colors.yellow && p.steps > 28) yellowGoal = true;
+    }
+
+    if(!redGoal || !blueGoal || !yellowGoal || !greenGoal){
+      canRaise = false;
+    }
+
+  }
+
   void raise(){
+
+    int i = 0;
+    while(i < 16){
+       if(pieceData[i].pos > 27){
+
+         //eating a piece with zero as second parameter gives no drinks
+         _eatPiece(i, 0);
+         if(pieceData[i].color == getCurrentPlayer().color){
+           _movePiece(i, 6);
+         }
+         //skip over rest of the pieces of same color
+         i += 4 - i % 4;
+       }else{
+         i++;
+       }
+    }
     getCurrentPlayer().raises++;
+    canRaise = false;
   }
 
   //täst enumist on enmmän haittaa ku hyötyä
@@ -369,7 +429,7 @@ class _GameWindowState extends State<GameWindow> {
     if(pos >= 28) pos -= 28;
     int index = _getPieceAt(pos);
     if(index != null){
-      print('eating piece $index');
+      print('eating piece $index at $pos');
       if(pieceData[index].isMine){
         print('lol ajoit miinaan');
         _eatPiece(n, pieceData[index].multiplier);
@@ -401,7 +461,7 @@ class _GameWindowState extends State<GameWindow> {
   void _handleTurn(int idx){
 
 
-    if(idx != null) _movePiece(idx);
+    if(idx != null) _movePiece(idx, diceVal);
     //6 = new turn
     if(diceVal != 6){
 
@@ -431,6 +491,7 @@ class _GameWindowState extends State<GameWindow> {
     }
 
     diceRolled = false;
+    canRaise = false;
 
     //cosmetic. hides piece selection before dice is rolled
     setState((){
@@ -546,47 +607,65 @@ class _GameWindowState extends State<GameWindow> {
             ),
 
             legalMoves.contains(true) ? Container(
+              height: 70,
               margin: const EdgeInsets.fromLTRB(10,5,10,5),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.all(Radius.circular(10)),
               ),
               child:Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: <Widget>[
-                  legalMoves[0] ? Radio(
-                  value: 0,
-                    groupValue: _radioGroupVal,
-                    onChanged: _handleRadioValueChange,
-                  ) : Container(),
-                  legalMoves[0] ? Text('Vika') : Text(''),
+                  legalMoves[0] ? Column(
+                    children:[
+                      Radio(
+                        value: 0,
+                        groupValue: _radioGroupVal,
+                        onChanged: _handleRadioValueChange,
+                        ),
+                        canDouble[0] ? Text('Tuplaa') : Text('Vika')
+                      ]
+                  ): Container(),
 
-                  legalMoves[1] ? Radio(
-                    value: 1,
-                    groupValue: _radioGroupVal,
-                    onChanged: _handleRadioValueChange,
+                  legalMoves[1] ? Column(
+                    children:[
+                      Radio(
+                        value: 1,
+                        groupValue: _radioGroupVal,
+                        onChanged: _handleRadioValueChange,
+                      ),
+                      canDouble[1] ? Text('Tuplaa') : Text('Kolmas')
+                    ]
                   ) : Container(),
-                  legalMoves[1] ? Text('Kolmas') : Text(''),
 
-                  legalMoves[2] ? Radio(
-                    value: 2,
-                    groupValue: _radioGroupVal,
-                    onChanged: _handleRadioValueChange,
+                  legalMoves[2] ? Column(
+                    children:[
+                      Radio(
+                        value: 2,
+                        groupValue: _radioGroupVal,
+                        onChanged: _handleRadioValueChange,
+                       ),
+                      canDouble[2] ? Text('Tuplaa') : Text('Toka')
+                    ]
                   ) : Container(),
-                  legalMoves[2] ? Text('Toka') : Text(''),
 
-                  legalMoves[3] ? Radio(
-                    value: 3,
-                    groupValue: _radioGroupVal,
-                    onChanged: _handleRadioValueChange,
+                  legalMoves[3] ? Column(
+                    children:[
+                      Radio(
+                        value: 3,
+                        groupValue: _radioGroupVal,
+                        onChanged: _handleRadioValueChange,
+                      ),
+                      Text('Kärki')
+                    ]
                   ) : Container(),
-                  legalMoves[3] ? Text('Kärki') : Text(''),
                 ],
 
               ),
             ): Container(),
 
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children:[
                   diceRolled ?  Container(
                     margin: const EdgeInsets.fromLTRB(10,5,2.5,5),
