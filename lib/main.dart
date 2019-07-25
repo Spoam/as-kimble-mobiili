@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kimble/game.dart';
+import 'package:kimble/winScreen.dart';
+import 'package:kimble/playerSelect.dart';
 
 void main() => runApp(MyApp());
 
@@ -20,7 +22,9 @@ class MyApp extends StatelessWidget {
       ),
       home: MainMenu(title: 'Kimblen päävalikko'),
       routes: <String, WidgetBuilder> {
-        '/game': (BuildContext context) => GameWindow(title: 'page A'),
+        '/playerselect' : (BuildContext context) => PlayerSelectScreen(),
+        '/playerselect/game': (BuildContext context) => GameWindow(title: 'page A'),
+        '/playerselect/game/end':(BuildContext context) => WinScreen(),
       },
     );
   }
@@ -37,6 +41,8 @@ class MainMenu extends StatefulWidget {
 
 class _MainMenuState extends State<MainMenu> {
 
+
+
   @override
   Widget build(BuildContext context){
 
@@ -46,17 +52,20 @@ class _MainMenuState extends State<MainMenu> {
       ),
       body:Center(
 
-        child:FloatingActionButton(
+        child:Container(
+          color: Colors.blue,
+          child:MaterialButton(
             onPressed:(){
-              Navigator.of(context).pushNamed('/game');
+              Navigator.of(context).pushNamed('/playerselect');
               },
-            child:Text('Aloita peli'),
+            child:Text('Uusi peli'),
         ),
 
       ),
-
+    )
     );
 
   }
 }
+
 

@@ -28,12 +28,10 @@ class _GameWindowState extends State<GameWindow> {
   List<List<double>> board = new List(28 + 16);
   List<Positioned> boardIcons = new List(44);
 
-  Player PlayerRed = Player('punainen',Colors.red);
-  Player PlayerBlue = Player('sininen', Colors.indigo);
-  Player PlayerGreen = Player('vihreä', Colors.green);
-  Player PlayerYellow = Player('keltainen', Colors.yellow);
-
-
+  Player PlayerRed;
+  Player PlayerBlue;
+  Player PlayerGreen;
+  Player PlayerYellow;
 
   Turn cur = Turn.RED;
 
@@ -240,8 +238,6 @@ class _GameWindowState extends State<GameWindow> {
     } else {
       move = diceVal;
     }
-
-
 
     //entering goal
     if (pieceData[n].steps + move > 28) {
@@ -452,7 +448,8 @@ class _GameWindowState extends State<GameWindow> {
       }
     }
 
-    getPlayerByColor(pieceData[index].color).drinks += eaterMultiplier * pieceData[index].multiplier;
+    Player player = getPlayerByColor(pieceData[index].color);
+    player.drinks += eaterMultiplier * pieceData[index].multiplier * player.players;
 
     pieceData[index].reset();
     pieceIcons[index] = _placePiece(pieceData[index].homePos[0],pieceData[index].homePos[1], pieceData[index].color,pieceData[index].multiplier);
@@ -549,9 +546,24 @@ class _GameWindowState extends State<GameWindow> {
     return null;
   }
 
+  bool _checkWin(Color color){
+    int piecesInGoal = 0;
+    for(int i = 0; i < 16; i++){
+      if(pieceData[i].steps > 28 && pieceData[i].color == color){
+        piecesInGoal++;
+      }
+    }
+    Player player = getPlayerByColor(color);
+    if(player.drunk >= player.drinks && piecesInGoal == 4){
+      Navigator.of(context).pushNamed('/playerselect/game/end', arguments: [PlayerRed, PlayerBlue, PlayerGreen, PlayerYellow]);
+      return true;
+    }
+    return false;
+  }
+
   bool first = true;
 
-  bool  canRaise = true;
+  bool  canRaise = false;
 
   int _radioGroupVal = -1;
 
@@ -571,6 +583,11 @@ class _GameWindowState extends State<GameWindow> {
       _initBoard(width);
       _initPieces(width);
       _createBoardIcons();
+      List<Player> players = ModalRoute.of(context).settings.arguments;
+      PlayerRed = players[0];
+      PlayerBlue = players[1];
+      PlayerGreen = players[2];
+      PlayerYellow = players[3];
       first = false;
     }
 

@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 
+class PlayerList{
+  List<Player> players = List(4);
+}
+
 class Player{
 
-  Player(this.name,this.color);
+  Player(this.name,this.color, this.players);
 
   final String name;
   final Color color;
+  final int players;
 
   int drinks = 0;
   int drunk = 0;
