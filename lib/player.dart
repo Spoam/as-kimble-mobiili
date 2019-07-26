@@ -16,6 +16,9 @@ class Player{
   int drunk = 0;
   int raises = 0;
 
+  bool winner = false;
+  bool moralWinner = false;
+
   List<Widget> getPlayerInfo(double pieceSize){
       List<Widget> info = [
         Icon(Icons.brightness_1,color: color, size: pieceSize),

@@ -27,6 +27,7 @@ class _GameWindowState extends State<GameWindow> {
   List<PieceData> pieceData = new List(16);
   List<List<double>> board = new List(28 + 16);
   List<Positioned> boardIcons = new List(44);
+  List<Player> players;
 
   Player PlayerRed;
   Player PlayerBlue;
@@ -268,8 +269,10 @@ class _GameWindowState extends State<GameWindow> {
     pieceData[n].steps == 1 ? pieceData[n].isMine = true : pieceData[n].isMine = false;
     //loop board
     if (pieceData[n].pos > 27 && !pieceData[n].atGoal) pieceData[n].pos -= 28;
+
     if (pieceData[n].atGoal) {
       pieceData[n].pos = pieceData[n].steps + 4 * cur.index - 1;
+      _checkWin(pieceData[n].color);
     }
     pieceIcons[n] = _placePiece(board[pieceData[n].pos][0], board[pieceData[n].pos][1], pieceData[n].color, pieceData[n].multiplier);
   }
@@ -294,10 +297,10 @@ class _GameWindowState extends State<GameWindow> {
       for (int i = 0; i < 4; i++) {
         if (data[i].atHome) {
           legalMoves[i] = false;
-          print('piece $i can\'t move because it\'s at home ');
+          //print('piece $i can\'t move because it\'s at home ');
         }
           if (data[i].isInDouble){
-          print('piece $i can\'t move because it\'s in double');
+          //print('piece $i can\'t move because it\'s in double');
           legalMoves[i] = false;
         }
       }
@@ -308,7 +311,7 @@ class _GameWindowState extends State<GameWindow> {
         if (nextPos > 27) nextPos -= 28;
         var samePos = data.where((piece) => piece.pos == nextPos);
         if (samePos.isNotEmpty){
-          print('piece $i can\'t move because another piece is blocking it ');
+          //print('piece $i can\'t move because another piece is blocking it ');
           legalMoves[i] = false;
         }
       }
@@ -321,7 +324,7 @@ class _GameWindowState extends State<GameWindow> {
           legalMoves[i] = true;
         }
         if (data[i].isInDouble){
-          print('piece $i can\'t move because it\'s in double ');
+          //print('piece $i can\'t move because it\'s in double ');
           legalMoves[i] = false;
         }
       }
@@ -332,13 +335,13 @@ class _GameWindowState extends State<GameWindow> {
         if(data[i].steps + diceVal <= 32){
           var samePos = data.where((piece) => piece.pos ==  data[i].steps + diceVal + cur.index * 4 - 1);
           if (samePos.isNotEmpty) {
-            print('piece $i can\'t move because another piece blocks it at goal');
+            //print('piece $i can\'t move because another piece blocks it at goal');
             legalMoves[i] = false;
           }else{
             legalMoves[i] = true;
           }
         }else{
-          print('piece $i can\'t move because it\'s at end of goal');
+          //print('piece $i can\'t move because it\'s at end of goal');
           legalMoves[i] = false;
         }
       }
@@ -346,15 +349,36 @@ class _GameWindowState extends State<GameWindow> {
     return legalMoves.contains(true);
   }
 
+  void _findMoralWinner(){
+
+    List<Player> mostDrinks = List(4);
+    mostDrinks[0] = PlayerRed;
+    mostDrinks[1] = PlayerBlue;
+    mostDrinks[2] = PlayerGreen;
+    mostDrinks[3] = PlayerYellow;
+
+    mostDrinks.sort((playerA,playerB) => playerA.drinks.compareTo(playerB.drinks));
+
+    var winners = mostDrinks.where((player) => player.drinks == mostDrinks[0].drinks);
+
+    winners.forEach((player) => player.moralWinner = true);
+    
+  }
+
+
   bool _checkRaise(){
 
     canRaise = true;
 
 
+    print('checking raise...$cur');
    //cant' raise if raising player has any pieces at home
     List<List<int>> curPieces = _findPiece(cur);
     for(int i = 0; i < curPieces.length; i++){
-      if(pieceData[curPieces[i][1]].atHome) canRaise = false;
+      if(pieceData[curPieces[i][1]].atHome){
+        canRaise = false;
+        print('cant raise because home is not empty');
+      }
     }
 
     bool redGoal = false;
@@ -373,8 +397,10 @@ class _GameWindowState extends State<GameWindow> {
 
     if(!redGoal || !blueGoal || !yellowGoal || !greenGoal){
       canRaise = false;
+      print('cant raise because some players havent reached goal yet');
     }
 
+    print('canRaise:$canRaise');
   }
 
   void raise(){
@@ -488,7 +514,6 @@ class _GameWindowState extends State<GameWindow> {
     }
 
     diceRolled = false;
-    canRaise = false;
 
     //cosmetic. hides piece selection before dice is rolled
     setState((){
@@ -547,14 +572,33 @@ class _GameWindowState extends State<GameWindow> {
   }
 
   bool _checkWin(Color color){
-    int piecesInGoal = 0;
+
+    List<int> piecesInGoal = [];
+
+    bool onlyPiece = false;
+
     for(int i = 0; i < 16; i++){
       if(pieceData[i].steps > 28 && pieceData[i].color == color){
-        piecesInGoal++;
+
+        if(piecesInGoal.isEmpty){
+          piecesInGoal.add(i);
+        }else{
+          for(int j = 0; j < piecesInGoal.length; j++){
+
+            if(pieceData[i].pos == pieceData[piecesInGoal[j]].pos){
+              onlyPiece = false;
+            }else{
+              onlyPiece = true;
+            }
+          }
+          if(onlyPiece) piecesInGoal.add(i);
+        }
       }
     }
     Player player = getPlayerByColor(color);
-    if(player.drunk >= player.drinks && piecesInGoal == 4){
+    if(player.drunk >= player.drinks && piecesInGoal.length == 4){
+      player.winner = true;
+      _findMoralWinner();
       Navigator.of(context).pushNamed('/playerselect/game/end', arguments: [PlayerRed, PlayerBlue, PlayerGreen, PlayerYellow]);
       return true;
     }
@@ -563,7 +607,7 @@ class _GameWindowState extends State<GameWindow> {
 
   bool first = true;
 
-  bool  canRaise = false;
+  bool canRaise = false;
 
   int _radioGroupVal = -1;
 
@@ -578,12 +622,13 @@ class _GameWindowState extends State<GameWindow> {
 
     pieceSize = width / 13;
 
+    print('rebuilding...$canRaise');
 
     if(first) {
       _initBoard(width);
       _initPieces(width);
       _createBoardIcons();
-      List<Player> players = ModalRoute.of(context).settings.arguments;
+      players = ModalRoute.of(context).settings.arguments;
       PlayerRed = players[0];
       PlayerBlue = players[1];
       PlayerGreen = players[2];
@@ -702,6 +747,7 @@ class _GameWindowState extends State<GameWindow> {
                       onPressed: (){
                         setState(() {
                           if(legalMoves.contains(true)) {
+                            canRaise = false;
                             _handleTurn(selectedPiece);
                           }else{
                             _handleTurn(null);
@@ -755,6 +801,7 @@ class _GameWindowState extends State<GameWindow> {
                     onPressed: (){
                       setState((){
                         PlayerRed.drunk++;
+                        _checkWin(Colors.red);
                       });
                     },
                   )
@@ -776,6 +823,7 @@ class _GameWindowState extends State<GameWindow> {
                     onPressed: (){
                       setState((){
                         PlayerBlue.drunk++;
+                        _checkWin(Colors.indigo);
                       });
                     },
                   )
@@ -798,6 +846,7 @@ class _GameWindowState extends State<GameWindow> {
                     onPressed: (){
                       setState((){
                         PlayerGreen.drunk++;
+                        _checkWin(Colors.green);
                       });
                     },
                   )
@@ -819,6 +868,7 @@ class _GameWindowState extends State<GameWindow> {
                     onPressed: (){
                       setState((){
                         PlayerYellow.drunk++;
+                        _checkWin(Colors.yellow);
                       });
                     },
                   )
