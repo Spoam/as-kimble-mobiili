@@ -27,7 +27,6 @@ class _GameWindowState extends State<GameWindow> {
   List<PieceData> pieceData = new List(16);
   List<List<double>> board = new List(28 + 16);
   List<Positioned> boardIcons = new List(44);
-  List<Player> players;
 
   Player PlayerRed;
   Player PlayerBlue;
@@ -349,22 +348,6 @@ class _GameWindowState extends State<GameWindow> {
     return legalMoves.contains(true);
   }
 
-  void _findMoralWinner(){
-
-    List<Player> mostDrinks = List(4);
-    mostDrinks[0] = PlayerRed;
-    mostDrinks[1] = PlayerBlue;
-    mostDrinks[2] = PlayerGreen;
-    mostDrinks[3] = PlayerYellow;
-
-    mostDrinks.sort((playerA,playerB) => playerA.drinks.compareTo(playerB.drinks));
-
-    var winners = mostDrinks.where((player) => player.drinks == mostDrinks[0].drinks);
-
-    winners.forEach((player) => player.moralWinner = true);
-    
-  }
-
 
   bool _checkRaise(){
 
@@ -511,6 +494,7 @@ class _GameWindowState extends State<GameWindow> {
           break;
       }
       attempts = 0;
+      canRaise = false;
     }
 
     diceRolled = false;
@@ -598,10 +582,10 @@ class _GameWindowState extends State<GameWindow> {
     Player player = getPlayerByColor(color);
     if(player.drunk >= player.drinks && piecesInGoal.length == 4){
       player.winner = true;
-      _findMoralWinner();
       Navigator.of(context).pushNamed('/playerselect/game/end', arguments: [PlayerRed, PlayerBlue, PlayerGreen, PlayerYellow]);
       return true;
     }
+    Navigator.of(context).pushNamed('/playerselect/game/end', arguments: [PlayerRed, PlayerBlue, PlayerGreen, PlayerYellow]);
     return false;
   }
 
@@ -622,13 +606,11 @@ class _GameWindowState extends State<GameWindow> {
 
     pieceSize = width / 13;
 
-    print('rebuilding...$canRaise');
-
     if(first) {
       _initBoard(width);
       _initPieces(width);
       _createBoardIcons();
-      players = ModalRoute.of(context).settings.arguments;
+      List<Player> players = ModalRoute.of(context).settings.arguments;
       PlayerRed = players[0];
       PlayerBlue = players[1];
       PlayerGreen = players[2];

@@ -17,10 +17,10 @@ class _PlayerSelectScreenState extends State<PlayerSelectScreen>{
   final blueNameReader = TextEditingController(text: 'Siniset');
   final blueCountReader = TextEditingController(text: '1');
 
-  final greenNameReader = TextEditingController(text: 'Keltaiset');
+  final greenNameReader = TextEditingController(text: 'Vihreät');
   final greenCountReader = TextEditingController(text: '1');
 
-  final yellowNameReader = TextEditingController(text: 'Vihreät');
+  final yellowNameReader = TextEditingController(text: 'Keltaiset');
   final yellowCountReader = TextEditingController(text: '1');
 
 
@@ -36,7 +36,7 @@ class _PlayerSelectScreenState extends State<PlayerSelectScreen>{
       Player red = Player(redNameReader.text, Colors.red, int.parse(redCountReader.text));
       Player blue = Player(blueNameReader.text, Colors.indigo, int.parse(blueCountReader.text));
       Player green = Player(greenNameReader.text, Colors.green, int.parse(greenCountReader.text));
-      Player yellow = Player(greenNameReader.text, Colors.yellow, int.parse(yellowCountReader.text));
+      Player yellow = Player(yellowNameReader.text, Colors.yellow, int.parse(yellowCountReader.text));
 
       Navigator.of(context).pushNamed('/playerselect/game', arguments: [red, blue, green, yellow]);
 
