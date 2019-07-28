@@ -32,6 +32,7 @@ class _WinState extends State<WinScreen>{
     double pieceSize = width / 13;
 
     return Scaffold(
+      backgroundColor: Colors.white30,
       appBar: AppBar(
         title:Text('Tulokset'),
       ),
@@ -40,6 +41,7 @@ class _WinState extends State<WinScreen>{
           Container(
             margin: EdgeInsets.fromLTRB(10, 10, 10, 10),
             decoration: BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(5)),
               color: Colors.white,
             ),
             child: Row(
@@ -47,13 +49,14 @@ class _WinState extends State<WinScreen>{
               children:[
                 Row(children: players[0].getPlayerInfo(pieceSize)),
                 players[0].winner ? Icon(Icons.stars, size: pieceSize, color: Colors.amberAccent) : Container(),
-                players[0].moralWinner ? Icon(Icons.delete, size: pieceSize, color: Colors.black38) :Container(),
+                players[0].moralWinner ? Icon(Icons.delete, size: pieceSize, color: Colors.black38) : Container(),
               ],
             ),
           ),
           Container(
             margin: EdgeInsets.fromLTRB(10, 10, 10, 10),
             decoration: BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(5)),
               color: Colors.white,
             ),
             child: Row(
@@ -68,6 +71,7 @@ class _WinState extends State<WinScreen>{
           Container(
             margin: EdgeInsets.fromLTRB(10, 10, 10, 10),
             decoration: BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(5)),
               color: Colors.white,
             ),
             child: Row(
@@ -82,14 +86,15 @@ class _WinState extends State<WinScreen>{
           Container(
             margin: EdgeInsets.fromLTRB(10, 10, 10, 10),
             decoration: BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(5)),
               color: Colors.white,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children:[
                 Row(children: players[3].getPlayerInfo(pieceSize)),
-                players[3].winner ? Icon(Icons.stars, size: pieceSize, color: Colors.amberAccent) : Container(),
-                players[3].moralWinner ? Icon(Icons.delete, size: pieceSize, color: Colors.black38) : Container(),
+                players[3].winner ? Icon(Icons.stars, size: pieceSize * 1.5, color: Colors.amberAccent) : Container(),
+                players[3].moralWinner ? Icon(Icons.delete, size: pieceSize * 1.5, color: Colors.black38) : Container(),
               ],
             ),
           ),

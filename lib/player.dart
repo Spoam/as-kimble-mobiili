@@ -21,10 +21,22 @@ class Player{
 
   List<Widget> getPlayerInfo(double pieceSize){
       List<Widget> info = [
-        Icon(Icons.brightness_1,color: color, size: pieceSize),
-        Text('  $name'),
-        Text('  juotu:$drunk'),
-        Text('  sakot:$drinks   '),
+        Icon(Icons.brightness_1,color: color, size: pieceSize * 1.5),
+        Text('  $name',
+          style: TextStyle(
+            fontSize: pieceSize / 1.4 - (name.length / 6 ) * (name.length / 6),
+          ),
+        ),
+        Text('  juotu:$drunk',
+          style: TextStyle(
+            fontSize: pieceSize / 1.5,
+          ),
+        ),
+        Text('  sakot:$drinks  ',
+          style: TextStyle(
+            fontSize: pieceSize / 1.5,
+          ),
+        ),
       ];
 
       for(int i = 0; i < raises; i++){

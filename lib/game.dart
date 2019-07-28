@@ -290,7 +290,7 @@ class _GameWindowState extends State<GameWindow> {
     legalMoves.setAll(0, [true, true, true, true]);
     canDouble.setAll(0, [false, false, false, false]);
 
-    print('checking moves...');
+    //print('checking moves...');
 
     if (diceVal != 6) {
       for (int i = 0; i < 4; i++) {
@@ -354,13 +354,13 @@ class _GameWindowState extends State<GameWindow> {
     canRaise = true;
 
 
-    print('checking raise...$cur');
+    //print('checking raise...$cur');
    //cant' raise if raising player has any pieces at home
     List<List<int>> curPieces = _findPiece(cur);
     for(int i = 0; i < curPieces.length; i++){
       if(pieceData[curPieces[i][1]].atHome){
         canRaise = false;
-        print('cant raise because home is not empty');
+        //print('cant raise because home is not empty');
       }
     }
 
@@ -585,7 +585,6 @@ class _GameWindowState extends State<GameWindow> {
       Navigator.of(context).pushNamed('/playerselect/game/end', arguments: [PlayerRed, PlayerBlue, PlayerGreen, PlayerYellow]);
       return true;
     }
-    Navigator.of(context).pushNamed('/playerselect/game/end', arguments: [PlayerRed, PlayerBlue, PlayerGreen, PlayerYellow]);
     return false;
   }
 
