@@ -20,7 +20,11 @@ class Player{
   bool moralWinner = false;
 
   List<Widget> getPlayerInfo(double pieceSize){
-      List<Widget> info = [
+
+    List<Widget> stars = [];
+    List<Widget> stars2 = [];
+
+    List<Widget> info = [
         Icon(Icons.brightness_1,color: color, size: pieceSize * 1.5),
         Text('  $name',
           style: TextStyle(
@@ -37,10 +41,21 @@ class Player{
             fontSize: pieceSize / 1.5,
           ),
         ),
+        Column(
+          children:stars,
+        ),
+        Column(
+          children:stars2,
+        )
       ];
 
+
       for(int i = 0; i < raises; i++){
-        info.add(Icon(Icons.star, color: Colors.amber, size: pieceSize/1.5));
+        if(i < 2){
+          stars.add(Icon(Icons.star, color: Colors.amber, size: pieceSize/1.5));
+        }else{
+          stars2.add(Icon(Icons.star, color: Colors.amber, size: pieceSize/1.5));
+        }
       }
 
       return info;

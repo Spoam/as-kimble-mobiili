@@ -756,6 +756,7 @@ class _GameWindowState extends State<GameWindow> {
                       onPressed: (){
                         setState(() {
                           raise();
+                          _handleTurn(null);
                         });
                       },
                       child: Text('Korota'),
