@@ -11,16 +11,16 @@ class _PlayerSelectScreenState extends State<PlayerSelectScreen>{
 
   List<FocusNode> focusNodes = List.generate(8, (node) => FocusNode());
 
-  final redNameReader = TextEditingController(text: 'Punaiset');
+  final redNameReader = TextEditingController();
   final redCountReader = TextEditingController(text: '1');
 
-  final blueNameReader = TextEditingController(text: 'Siniset');
+  final blueNameReader = TextEditingController();
   final blueCountReader = TextEditingController(text: '1');
 
-  final greenNameReader = TextEditingController(text: 'Vihreät');
+  final greenNameReader = TextEditingController();
   final greenCountReader = TextEditingController(text: '1');
 
-  final yellowNameReader = TextEditingController(text: 'Keltaiset');
+  final yellowNameReader = TextEditingController();
   final yellowCountReader = TextEditingController(text: '1');
 
 
@@ -31,6 +31,14 @@ class _PlayerSelectScreenState extends State<PlayerSelectScreen>{
   }
 
   void _startGame(){
+
+    if(redNameReader.text.isEmpty) redNameReader.text = "Punaiset";
+    if(blueNameReader.text.isEmpty) blueNameReader.text = "Siniset";
+    if(greenNameReader.text.isEmpty) greenNameReader.text = "Vihreät";
+    if(yellowNameReader.text.isEmpty) yellowNameReader.text = "Keltaiset";
+
+
+
     try{
 
       Player red = Player(redNameReader.text, Colors.red, int.parse(redCountReader.text));

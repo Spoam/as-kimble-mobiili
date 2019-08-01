@@ -17,6 +17,7 @@ environment:
   sdk: ">=2.1.0 <3.0.0"
 
 dependencies:
+  audioplayers: ^0.13.1
   flutter:
     sdk: flutter
 
@@ -48,6 +49,9 @@ flutter:
     - res/textures/pips4.png
     - res/textures/pips5.png
     - res/textures/pips6.png
+    - assets/sound/naks-koko-2.mp3
+    - assets/sound/naks-down1.mp3
+    - assets/sound/naks-up-1.mp3
 
   #  - images/a_dot_ham.jpeg
 

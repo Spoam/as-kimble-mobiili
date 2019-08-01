@@ -3,6 +3,8 @@ import 'package:kimble/piece.dart';
 import 'dart:math';
 import 'dart:core';
 import 'package:kimble/player.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:audioplayers/audio_cache.dart';
 
 enum Turn{
   RED,
@@ -32,6 +34,8 @@ class _GameWindowState extends State<GameWindow> {
   Player PlayerBlue;
   Player PlayerGreen;
   Player PlayerYellow;
+
+  AudioCache sound = AudioCache(prefix: 'sound/');
 
   Turn cur = Turn.RED;
 
@@ -84,6 +88,48 @@ class _GameWindowState extends State<GameWindow> {
   }
 
 
+  void _rollDice(){
+    if (!diceRolled) {
+      diceVal = rand.nextInt(6) + 1;
+      attempts++;
+
+      diceRolled = false;
+
+      if (diceVal != 6 && attempts < 3) {
+        if(_checkLegalMoves(1)) diceRolled = true;
+        if(_checkLegalMoves(2)) diceRolled = true;
+        if(_checkLegalMoves(3)) diceRolled = true;
+        if(_checkLegalMoves(4)) diceRolled = true;
+        if(_checkLegalMoves(5)) diceRolled = true;
+        canRaise = false;
+      } else {
+        diceRolled = true;
+      }
+      if(diceVal == 6)_checkRaise();
+      _checkLegalMoves(diceVal);
+
+      //set selected piece to first movable
+      int idx = legalMoves.reversed.toList().indexOf(true);
+      if(idx != -1){
+        _handleRadioValueChange(3 - idx);
+      }else if(diceRolled){
+        _handleTurn(null);
+      }
+
+    } else { //DEBUG poist tää
+      diceVal = rand.nextInt(6) + 1;
+      diceRolled = true;
+      _checkLegalMoves(diceVal);
+
+      int idx = legalMoves.indexOf(true);
+      if(idx != -1){
+        _handleRadioValueChange(idx);
+      }else{
+        selectedPiece = null;
+      }
+    }
+  }
+
   int diceVal = 1;
 
   Random rand = Random(DateTime.now().microsecond);
@@ -91,13 +137,16 @@ class _GameWindowState extends State<GameWindow> {
   bool diceRolled = false;
 
   void _longPressEnd(LongPressEndDetails details) {
-    setState(() {});
-    //side = rand.nextInt(6) + 1;
+    sound.play('naks-up-1.mp3');
+    _rollDice();
   }
 
   void _tapUp(TapUpDetails details) {
-    setState(() {});
-    //side = rand.nextInt(6) + 1;
+    sound.play('naks-up-1.mp3');
+  }
+
+  void _longPress(){
+    sound.play('naks-down1.mp3');
   }
 
   int attempts = 0;
@@ -107,47 +156,13 @@ class _GameWindowState extends State<GameWindow> {
     return GestureDetector(
         onLongPressEnd: _longPressEnd,
         onTapUp: _tapUp,
+        onLongPress: _longPress,
         onTap: () {
+
+          sound.play('naks-down1.mp3');
+
           setState(() {
-            if (!diceRolled) {
-              diceVal = rand.nextInt(6) + 1;
-              attempts++;
-
-              diceRolled = false;
-
-              if (diceVal != 6 && attempts < 3) {
-                if(_checkLegalMoves(1)) diceRolled = true;
-                if(_checkLegalMoves(2)) diceRolled = true;
-                if(_checkLegalMoves(3)) diceRolled = true;
-                if(_checkLegalMoves(4)) diceRolled = true;
-                if(_checkLegalMoves(5)) diceRolled = true;
-                canRaise = false;
-              } else {
-                diceRolled = true;
-              }
-              if(diceVal == 6)_checkRaise();
-              _checkLegalMoves(diceVal);
-
-              //set selected piece to first movable
-              int idx = legalMoves.reversed.toList().indexOf(true);
-              if(idx != -1){
-                _handleRadioValueChange(3 - idx);
-              }else if(diceRolled){
-                _handleTurn(null);
-              }
-
-            } else { //DEBUG poist tää
-              diceVal = rand.nextInt(6) + 1;
-              diceRolled = true;
-              _checkLegalMoves(diceVal);
-
-              int idx = legalMoves.indexOf(true);
-              if(idx != -1){
-                _handleRadioValueChange(idx);
-              }else{
-                selectedPiece = null;
-              }
-            }
+            _rollDice();
           });
         },
         child: Container(
@@ -614,6 +629,9 @@ class _GameWindowState extends State<GameWindow> {
       PlayerBlue = players[1];
       PlayerGreen = players[2];
       PlayerYellow = players[3];
+      sound.load('naks-koko-2.mp3');
+      sound.load('naks-up-1.mp3');
+      sound.load('naks-down1.mp3');
       first = false;
     }
 

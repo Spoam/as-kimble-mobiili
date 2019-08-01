@@ -78,8 +78,12 @@ class _WinState extends State<WinScreen>{
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children:[
                 Row(children: players[2].getPlayerInfo(pieceSize)),
-                players[2].winner ? Icon(Icons.stars, size: pieceSize, color: Colors.amberAccent) : Container(),
-                players[2].moralWinner ? Icon(Icons.delete, size: pieceSize, color: Colors.black38) : Container(),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children:[
+                    players[2].winner ? Icon(Icons.stars, size: pieceSize, color: Colors.amberAccent) : Container(),
+                    players[2].moralWinner ? Icon(Icons.delete, size: pieceSize, color: Colors.black38) : Container(),
+                ]),
               ],
             ),
           ),
