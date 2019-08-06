@@ -5,6 +5,7 @@ import 'dart:core';
 import 'package:kimble/player.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:audioplayers/audio_cache.dart';
+import 'package:kimble/animations.dart';
 
 enum Turn{
   RED,
@@ -23,9 +24,9 @@ class GameWindow extends StatefulWidget {
 
 }
 
-class _GameWindowState extends State<GameWindow> {
+class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateMixin{
 
-  List<Positioned> pieceIcons = new List(16);
+  List<AnimatedPositioned> pieceIcons = new List(16);
   List<PieceData> pieceData = new List(16);
   List<List<double>> board = new List(28 + 16);
   List<Positioned> boardIcons = new List(44);
@@ -37,7 +38,15 @@ class _GameWindowState extends State<GameWindow> {
 
   AudioCache sound = AudioCache(prefix: 'sound/');
 
+  AnimationController controller;
+  Animation<double> slideAnimation;
+
+  double turnTextAnimOffset = 0;
+  Duration animDuration = Duration(milliseconds: 0);
+
+
   Turn cur = Turn.RED;
+
 
 
   void _initBoard(double width) {
@@ -138,11 +147,13 @@ class _GameWindowState extends State<GameWindow> {
 
   void _longPressEnd(LongPressEndDetails details) {
     sound.play('naks-up-1.mp3');
-    _rollDice();
+    setState((){
+      _rollDice();
+    });
   }
 
   void _tapUp(TapUpDetails details) {
-    sound.play('naks-up-1.mp3');
+    //sound.play('naks-up-1.mp3');
   }
 
   void _longPress(){
@@ -159,7 +170,7 @@ class _GameWindowState extends State<GameWindow> {
         onLongPress: _longPress,
         onTap: () {
 
-          sound.play('naks-down1.mp3');
+          sound.play('naks-koko-2.mp3');
 
           setState(() {
             _rollDice();
@@ -179,9 +190,11 @@ class _GameWindowState extends State<GameWindow> {
     );
   }
 
-  Widget _placePiece(double x, double y, Color col, int multiplier,) {
+  Widget _placePiece(double x, double y, Color col, int multiplier, int duration) {
 
-    return Positioned(
+    return AnimatedPositioned(
+      duration: Duration(milliseconds: duration),
+      curve: Curves.easeInOut,
       top: y,
       left: x,
       child: (multiplier > 1) ? Icon(
@@ -199,25 +212,25 @@ class _GameWindowState extends State<GameWindow> {
         double x = (width / 6) - rowCenter + (pieceSize / sqrt(2)) * i;
         double y = (width / 6) + rowCenter - (pieceSize / sqrt(2)) * i;
 
-        pieceIcons[i] = _placePiece(x, y, Colors.red, 1);
+        pieceIcons[i] = _placePiece(x, y, Colors.red, 1, 0);
         pieceData[i] = PieceData(17, Colors.red, [x, y]);
       } else if (i / 4 < 2) {
         double x = (width - (width / 6)) - rowCenter + (pieceSize / sqrt(2)) * (i - 4);
         double y = (width / 6) - rowCenter + (pieceSize / sqrt(2)) * (i - 4);
 
-        pieceIcons[i] = _placePiece(x, y, Colors.indigo, 1);
+        pieceIcons[i] = _placePiece(x, y, Colors.indigo, 1, 0);
         pieceData[i] = PieceData(24, Colors.indigo, [x, y]);
       } else if (i / 4 < 3) {
         double x = (width - (width / 6)) - rowCenter + (pieceSize / sqrt(2)) * (i - 8);
         double y = (width - (width / 6)) + rowCenter - (pieceSize / sqrt(2)) * (i - 8);
 
-        pieceIcons[i] = _placePiece(x, y, Colors.green, 1);
+        pieceIcons[i] = _placePiece(x, y, Colors.green, 1, 0);
         pieceData[i] = PieceData(3, Colors.green, [x, y]);
       } else if (i / 4 < 4) {
         double x = (width / 6) - rowCenter + (pieceSize / sqrt(2)) * (i - 12);
         double y = (width - (width / 6)) - rowCenter + (pieceSize / sqrt(2)) * (i - 12);
 
-        pieceIcons[i] = _placePiece(x, y, Colors.yellow, 1);
+        pieceIcons[i] = _placePiece(x, y, Colors.yellow, 1, 0);
         pieceData[i] = PieceData(10, Colors.yellow, [x, y]);
       }
     }
@@ -234,8 +247,8 @@ class _GameWindowState extends State<GameWindow> {
         pieceData[n].steps  = -1;
         pieceData[n].pos = -1;
 
-        pieceIcons[index] = _placePiece(board[pieceData[index].pos][0], board[pieceData[index].pos][1], pieceData[index].color, pieceData[index].multiplier);
-        pieceIcons[n] = _placePiece(30, 30,Colors.lightBlueAccent, 1);
+        pieceIcons[index] = _placePiece(board[pieceData[index].pos][0], board[pieceData[index].pos][1], pieceData[index].color, pieceData[index].multiplier, 0);
+        pieceIcons[n] = _placePiece(pieceData[n].homePos[0], pieceData[n].homePos[1],Colors.lightBlueAccent, 1, 0);
 
         return true;
       }
@@ -264,7 +277,7 @@ class _GameWindowState extends State<GameWindow> {
           pieceData[id].pos = 28 + cur.index * 4;
           pieceData[id].steps = 29;
           pieceData[id].isInDouble = false;
-          pieceIcons[id] = _placePiece(board[pieceData[id].pos][0], board[pieceData[id].pos][1], pieceData[n].color, 1);
+          pieceIcons[id] = _placePiece(board[pieceData[id].pos][0], board[pieceData[id].pos][1], pieceData[n].color, 1, 150 * move);
         }
         pieceData[n].atGoal = true;
         pieceData[n].doubleMembers.clear();
@@ -288,7 +301,7 @@ class _GameWindowState extends State<GameWindow> {
       pieceData[n].pos = pieceData[n].steps + 4 * cur.index - 1;
       _checkWin(pieceData[n].color);
     }
-    pieceIcons[n] = _placePiece(board[pieceData[n].pos][0], board[pieceData[n].pos][1], pieceData[n].color, pieceData[n].multiplier);
+    pieceIcons[n] = _placePiece(board[pieceData[n].pos][0], board[pieceData[n].pos][1], pieceData[n].color, pieceData[n].multiplier, 150 * move);
   }
 
   List<bool> legalMoves = [false, false, false, false];
@@ -395,10 +408,8 @@ class _GameWindowState extends State<GameWindow> {
 
     if(!redGoal || !blueGoal || !yellowGoal || !greenGoal){
       canRaise = false;
-      print('cant raise because some players havent reached goal yet');
+      //print('cant raise because some players havent reached goal yet');
     }
-
-    print('canRaise:$canRaise');
   }
 
   void raise(){
@@ -468,7 +479,7 @@ class _GameWindowState extends State<GameWindow> {
       for(int i = 0; i < pieceData[index].doubleMembers.length; i++){
         int pieceId = pieceData[index].doubleMembers[i];
         pieceData[pieceId].reset();
-        pieceIcons[pieceId] = _placePiece(pieceData[pieceId].homePos[0],pieceData[pieceId].homePos[1], pieceData[pieceId].color,pieceData[pieceId].multiplier);
+        pieceIcons[pieceId] = _placePiece(pieceData[pieceId].homePos[0],pieceData[pieceId].homePos[1], pieceData[pieceId].color,pieceData[pieceId].multiplier, 400);
       }
     }
 
@@ -476,7 +487,7 @@ class _GameWindowState extends State<GameWindow> {
     player.drinks += eaterMultiplier * pieceData[index].multiplier * player.players;
 
     pieceData[index].reset();
-    pieceIcons[index] = _placePiece(pieceData[index].homePos[0],pieceData[index].homePos[1], pieceData[index].color,pieceData[index].multiplier);
+    pieceIcons[index] = _placePiece(pieceData[index].homePos[0],pieceData[index].homePos[1], pieceData[index].color,pieceData[index].multiplier, 400);
   }
 
   void _handleTurn(int idx){
@@ -516,8 +527,13 @@ class _GameWindowState extends State<GameWindow> {
 
     //cosmetic. hides piece selection before dice is rolled
     setState((){
+      selectedPiece = null;
+      controller.reset();
       legalMoves.setAll(0, [false, false, false, false]);
+      if(diceVal != 6) controller.forward();
     });
+
+
 
   }
 
@@ -603,6 +619,15 @@ class _GameWindowState extends State<GameWindow> {
     return false;
   }
 
+  Widget _showSelected(){
+
+      return Positioned(
+      top: pieceIcons[selectedPiece].top - pieceSize / 3.0 / 2.0 ,
+      left: pieceIcons[selectedPiece].left - pieceSize / 3.0 / 2.0,
+      child: Icon(Icons.gps_not_fixed, color: Colors.black, size: pieceSize + pieceSize / 3.0)
+    );
+  }
+
   bool first = true;
 
   bool canRaise = false;
@@ -613,6 +638,39 @@ class _GameWindowState extends State<GameWindow> {
 
   Color bgColor = Colors.red;
 
+  @override
+  void initState(){
+    super.initState();
+
+    sound.load('naks-koko-2.mp3');
+    sound.load('naks-up-1.mp3');
+    sound.load('naks-down1.mp3');
+    sound.disableLog();
+
+    controller = AnimationController(
+        duration: Duration(milliseconds: 2000), vsync: this)
+    ..addListener((){
+      setState((){
+        turnTextAnimOffset = slideAnimation.value;
+      });
+    })
+    ..addStatusListener((status){
+      if(status == AnimationStatus.completed){
+        controller.reset();
+      }
+    });
+
+    slideAnimation = Tween<double>(
+      begin: 0,
+      end: 100,
+    ).animate(
+      CurvedAnimation(
+        parent: controller,
+        curve: Curves.slowMiddle,
+      ),
+    );
+  }
+
   Widget build(BuildContext context){
 
 
@@ -621,24 +679,26 @@ class _GameWindowState extends State<GameWindow> {
     pieceSize = width / 13;
 
     if(first) {
+
+      double width = MediaQuery.of(context).size.width - 20;
+
       _initBoard(width);
       _initPieces(width);
+
       _createBoardIcons();
       List<Player> players = ModalRoute.of(context).settings.arguments;
       PlayerRed = players[0];
       PlayerBlue = players[1];
       PlayerGreen = players[2];
       PlayerYellow = players[3];
-      sound.load('naks-koko-2.mp3');
-      sound.load('naks-up-1.mp3');
-      sound.load('naks-down1.mp3');
+
       first = false;
     }
 
-    //add all widgetts to a signle list
-    List<Widget> all = [];
+    //add all board widgets to a single list
+    List<Widget> boardStack = [];
     //board
-    all.add(Container(
+    boardStack.add(Container(
       margin: const EdgeInsets.fromLTRB(10,10,10,5),
       decoration : BoxDecoration(
         color: Colors.lightBlueAccent,
@@ -649,22 +709,52 @@ class _GameWindowState extends State<GameWindow> {
       height: width,
     ));
 
-    all.addAll(boardIcons);
-    all.addAll(pieceIcons);
+    boardStack.addAll(boardIcons);
+    boardStack.addAll(pieceIcons);
+
+    if(selectedPiece != null) boardStack.add(_showSelected());
 
     //dice
-    all.add(Positioned(
+    boardStack.add(Positioned(
       top: width / 2 - pieceSize / 4,
       left: width / 2 - pieceSize / 4,
       child:_dice(),
     ));
+
+    Positioned turnText = Positioned(
+      top: width / 2 - pieceSize * 2,
+      left: width + pieceSize - ((width) * turnTextAnimOffset/80),
+      child:Stack(
+        children:[
+          Text(
+            getCurrentPlayer().name,
+            style: TextStyle(
+              fontSize: pieceSize,
+              foreground: Paint()
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = pieceSize / 15
+                ..color = Colors.black,
+            ),
+          ),
+          Text(
+            getCurrentPlayer().name,
+            style: TextStyle(
+              fontSize: pieceSize,
+              color: getCurrentPlayer().color,
+            ),
+          )
+        ],
+      )
+
+    );
+    boardStack.add(turnText);
 
     return Scaffold(
         backgroundColor: bgColor,
         body:ListView(
           children:[
             Stack(
-              children:all,
+              children:boardStack,
             ),
 
             legalMoves.contains(true) ? Container(
@@ -684,7 +774,7 @@ class _GameWindowState extends State<GameWindow> {
                         groupValue: _radioGroupVal,
                         onChanged: _handleRadioValueChange,
                         ),
-                        canDouble[0] ? Text('Tuplaa') : Text('Vika')
+                        canDouble[0] ? Text('Tuplaa') : pieceData[_findPiece(cur)[0][1]].atHome ? Text('Uusi') : Text('Vika')
                       ]
                   ): Container(),
 
@@ -695,7 +785,7 @@ class _GameWindowState extends State<GameWindow> {
                         groupValue: _radioGroupVal,
                         onChanged: _handleRadioValueChange,
                       ),
-                      canDouble[1] ? Text('Tuplaa') : Text('Kolmas')
+                      canDouble[1] ? Text('Tuplaa') : pieceData[_findPiece(cur)[1][1]].atHome ? Text('Uusi') :Text('Kolmas')
                     ]
                   ) : Container(),
 
@@ -706,7 +796,7 @@ class _GameWindowState extends State<GameWindow> {
                         groupValue: _radioGroupVal,
                         onChanged: _handleRadioValueChange,
                        ),
-                      canDouble[2] ? Text('Tuplaa') : Text('Toka')
+                      canDouble[2] ? Text('Tuplaa') : pieceData[_findPiece(cur)[2][1]].atHome ? Text('Uusi') :Text('Toka')
                     ]
                   ) : Container(),
 
@@ -717,7 +807,7 @@ class _GameWindowState extends State<GameWindow> {
                         groupValue: _radioGroupVal,
                         onChanged: _handleRadioValueChange,
                       ),
-                      Text('Kärki')
+                      pieceData[_findPiece(cur)[3][1]].atHome ? Text('Uusi') :Text('Kärki')
                     ]
                   ) : Container(),
                 ],
@@ -875,6 +965,7 @@ class _GameWindowState extends State<GameWindow> {
                 ]
             )
            ),
+
           ],
 
         )
