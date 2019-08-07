@@ -619,6 +619,33 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
     return false;
   }
 
+  Widget _buildPlayerInfo(Color col){
+    return Container(
+              margin: const EdgeInsets.fromLTRB(10,5,10,5),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+              ),
+              child:Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children:[
+                    Row(
+                      children:getPlayerByColor(col).getPlayerInfo(pieceSize),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.plus_one,size: pieceSize),
+                      onPressed: (){
+                        setState((){
+                          getPlayerByColor(col).drunk++;
+                          _checkWin(col);
+                        });
+                      },
+                    )
+                  ]
+              ),
+            );
+  }
+
   Widget _showSelected(){
 
       return Positioned(
@@ -627,16 +654,6 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
       child: Icon(Icons.gps_not_fixed, color: Colors.black, size: pieceSize + pieceSize / 3.0)
     );
   }
-
-  bool first = true;
-
-  bool canRaise = false;
-
-  int _radioGroupVal = -1;
-
-  double pieceSize = 20;
-
-  Color bgColor = Colors.red;
 
   @override
   void initState(){
@@ -670,6 +687,16 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
       ),
     );
   }
+
+  bool first = true;
+
+  bool canRaise = false;
+
+  int _radioGroupVal = -1;
+
+  double pieceSize = 20;
+
+  Color bgColor = Colors.red;
 
   Widget build(BuildContext context){
 
@@ -807,6 +834,7 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
                         groupValue: _radioGroupVal,
                         onChanged: _handleRadioValueChange,
                       ),
+                      //no need to check for doubling because first piece can never double
                       pieceData[_findPiece(cur)[3][1]].atHome ? Text('Uusi') :Text('Kärki')
                     ]
                   ) : Container(),
@@ -874,98 +902,10 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
             ),
 
             //player info starts
-            Container(
-              margin: const EdgeInsets.fromLTRB(10,5,10,5),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-              ),
-              child:Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children:[
-                  Row(
-                      children:PlayerRed.getPlayerInfo(pieceSize),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.plus_one,size: pieceSize),
-                    onPressed: (){
-                      setState((){
-                        PlayerRed.drunk++;
-                        _checkWin(Colors.red);
-                      });
-                    },
-                  )
-                ]
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.fromLTRB(10,5,10,5),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-              ),
-              child:Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children:[
-                  Row(children:PlayerBlue.getPlayerInfo(pieceSize)),
-                  IconButton(
-                    icon: Icon(Icons.plus_one,size: pieceSize),
-                    onPressed: (){
-                      setState((){
-                        PlayerBlue.drunk++;
-                        _checkWin(Colors.indigo);
-                      });
-                    },
-                  )
-                ]
-              ),
-            ),
-
-            Container(
-              margin: const EdgeInsets.fromLTRB(10,5,10,5),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-              ),
-              child:Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children:[
-                  Row(children:PlayerGreen.getPlayerInfo(pieceSize)),
-                  IconButton(
-                    icon: Icon(Icons.plus_one,size: pieceSize),
-                    onPressed: (){
-                      setState((){
-                        PlayerGreen.drunk++;
-                        _checkWin(Colors.green);
-                      });
-                    },
-                  )
-                ]
-              ),
-            ),
-           Container(
-             margin: const EdgeInsets.fromLTRB(10,5,10,5),
-             decoration: BoxDecoration(
-               color: Colors.white,
-               borderRadius: BorderRadius.all(Radius.circular(10)),
-             ),
-             child:Row(
-                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children:[
-                  Row(children:PlayerYellow.getPlayerInfo(pieceSize)),
-                  IconButton(
-                    icon: Icon(Icons.plus_one,size: pieceSize),
-                    onPressed: (){
-                      setState((){
-                        PlayerYellow.drunk++;
-                        _checkWin(Colors.yellow);
-                      });
-                    },
-                  )
-                ]
-            )
-           ),
-
+            _buildPlayerInfo(Colors.red),
+            _buildPlayerInfo(Colors.indigo),
+            _buildPlayerInfo(Colors.green),
+            _buildPlayerInfo(Colors.yellow),
           ],
 
         )
