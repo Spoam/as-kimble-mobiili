@@ -52,6 +52,9 @@ flutter:
     - assets/sound/naks-koko-2.mp3
     - assets/sound/naks-down1.mp3
     - assets/sound/naks-up-1.mp3
+    - assets/sound/mine1.mp3
+    - assets/sound/mine2.mp3
+    - assets/sound/eat1.mp3
 
   #  - images/a_dot_ham.jpeg
 

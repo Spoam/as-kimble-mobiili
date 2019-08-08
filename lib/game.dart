@@ -5,7 +5,6 @@ import 'dart:core';
 import 'package:kimble/player.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:audioplayers/audio_cache.dart';
-import 'package:kimble/animations.dart';
 
 enum Turn{
   RED,
@@ -35,6 +34,8 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
   Player PlayerBlue;
   Player PlayerGreen;
   Player PlayerYellow;
+
+  List<Player> players;
 
   AudioCache sound = AudioCache(prefix: 'sound/');
 
@@ -125,7 +126,7 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
         _handleTurn(null);
       }
 
-    } else { //DEBUG poist tää
+    } else { //TODO debug poist tää
       diceVal = rand.nextInt(6) + 1;
       diceRolled = true;
       _checkLegalMoves(diceVal);
@@ -392,6 +393,10 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
       }
     }
 
+
+    var otherRaises = players.where((player) => player.raises < getCurrentPlayer().raises);
+    if(otherRaises.isNotEmpty) canRaise = false;
+
     bool redGoal = false;
     bool blueGoal = false;
     bool greenGoal = false;
@@ -462,11 +467,12 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
     if(index != null){
       print('eating piece $index at $pos');
       if(pieceData[index].isMine){
-        print('lol ajoit miinaan');
+        sound.play('mine2.mp3');
         _eatPiece(n, pieceData[index].multiplier);
         return true;
       }else{
         print('ate piece $index');
+        sound.play('eat1.mp3');
         _eatPiece(index, pieceData[n].multiplier);
       }
     }
@@ -713,7 +719,8 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
       _initPieces(width);
 
       _createBoardIcons();
-      List<Player> players = ModalRoute.of(context).settings.arguments;
+      players = ModalRoute.of(context).settings.arguments;
+      //TODO remove separate player variable entirely
       PlayerRed = players[0];
       PlayerBlue = players[1];
       PlayerGreen = players[2];
