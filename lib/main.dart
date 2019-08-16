@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:kimble/game.dart';
+import 'package:kimble/gameUI.dart';
 import 'package:kimble/winScreen.dart';
 import 'package:kimble/playerSelect.dart';
 
