@@ -201,6 +201,7 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
 
     logic.handleTurn(idx);
 
+    if(logic.isWinner()){ Navigator.of(context).pushNamed('/playerselect/game/end', arguments: players);}
     //cosmetic. hides piece selection before dice is rolled
     setState((){
       selectedPiece = null;
@@ -254,7 +255,7 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
                       onPressed: (){
                         setState((){
                           logic.getPlayerByColor(col).drunk++;
-                          logic.checkWin(col);
+                          if(logic.checkWin(col)) Navigator.of(context).pushNamed('/playerselect/game/end', arguments: players);
                         });
                       },
                     )
