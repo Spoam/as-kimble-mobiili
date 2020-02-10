@@ -58,11 +58,13 @@ class GameLogic{
       //set selected piece to first movable
       //done in gameUI now
 
-    } else { //TODO debug poist tää
-      diceVal = rand.nextInt(6) + 1;
-      _diceRolled = true;
-      _checkLegalMoves(diceVal);
-
+    } else {
+      //only on run on debug mode
+      assert(() {
+        diceVal = rand.nextInt(6) + 1;
+        _diceRolled = true;
+        _checkLegalMoves(diceVal);
+      }());
     }
   }
 
