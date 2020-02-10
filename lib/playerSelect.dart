@@ -169,7 +169,7 @@ class _PlayerSelectScreenState extends State<PlayerSelectScreen>{
             _buildPlayerInput(width, pieceSize, Colors.blue, 2, 'blue'),
             _buildPlayerInput(width, pieceSize, Colors.green, 4, 'green'),
             _buildPlayerInput(width, pieceSize, Colors.yellow, 6, 'yellow'),
-            Container(
+            Container( //start button
               margin: const EdgeInsets.fromLTRB(10,10,10,10),
               width: width / 2 - 20,
               decoration: BoxDecoration(
@@ -192,7 +192,7 @@ class _PlayerSelectScreenState extends State<PlayerSelectScreen>{
                 child: Text('Aloita'),
               )
             ),
-            FloatingActionButton(
+            FloatingActionButton(//back button
               onPressed:(){
               Navigator.pop(context);
               },
