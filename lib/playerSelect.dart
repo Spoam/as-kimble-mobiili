@@ -6,22 +6,21 @@ class PlayerSelectScreen extends StatefulWidget{
   @override
   _PlayerSelectScreenState createState() => _PlayerSelectScreenState();
 }
+
+
+
 class _PlayerSelectScreenState extends State<PlayerSelectScreen>{
 
 
   List<FocusNode> focusNodes = List.generate(8, (node) => FocusNode());
 
-  final redNameReader = TextEditingController();
-  final redCountReader = TextEditingController(text: '1');
-
-  final blueNameReader = TextEditingController();
-  final blueCountReader = TextEditingController(text: '1');
-
-  final greenNameReader = TextEditingController();
-  final greenCountReader = TextEditingController(text: '1');
-
-  final yellowNameReader = TextEditingController();
-  final yellowCountReader = TextEditingController(text: '1');
+  final Map<String, List<TextEditingController>> controllers =
+  {
+    'red' : [TextEditingController(), TextEditingController(text: '1')],
+    'blue' : [TextEditingController(), TextEditingController(text: '1')],
+    'green' : [TextEditingController(), TextEditingController(text: '1')],
+    'yellow' : [TextEditingController(), TextEditingController(text: '1')]
+  };
 
 
   void _nextFocus(BuildContext context, int i){
@@ -32,19 +31,19 @@ class _PlayerSelectScreenState extends State<PlayerSelectScreen>{
 
   void _startGame(){
 
-    if(redNameReader.text.isEmpty) redNameReader.text = "Punaiset";
-    if(blueNameReader.text.isEmpty) blueNameReader.text = "Siniset";
-    if(greenNameReader.text.isEmpty) greenNameReader.text = "Vihreät";
-    if(yellowNameReader.text.isEmpty) yellowNameReader.text = "Keltaiset";
+    if(controllers['red'][0].text.isEmpty) controllers['red'][0].text = "Punaiset";
+    if(controllers['blue'][0].text.isEmpty) controllers['blue'][0].text = "Siniset";
+    if(controllers['green'][0].text.isEmpty) controllers['green'][0].text = "Vihreät";
+    if(controllers['yellow'][0].text.isEmpty) controllers['yellow'][0].text = "Keltaiset";
 
 
 
     try{
 
-      Player red = Player(redNameReader.text, Colors.red, int.parse(redCountReader.text));
-      Player blue = Player(blueNameReader.text, Colors.indigo, int.parse(blueCountReader.text));
-      Player green = Player(greenNameReader.text, Colors.green, int.parse(greenCountReader.text));
-      Player yellow = Player(yellowNameReader.text, Colors.yellow, int.parse(yellowCountReader.text));
+      Player red = Player(controllers['red'][0].text, Colors.red, int.parse(controllers['red'][1].text));
+      Player blue = Player(controllers['blue'][0].text, Colors.indigo, int.parse(controllers['blue'][1].text));
+      Player green = Player(controllers['green'][0].text, Colors.green, int.parse(controllers['green'][1].text));
+      Player yellow = Player(controllers['yellow'][0].text, Colors.yellow, int.parse(controllers['yellow'][1].text));
 
       Navigator.of(context).pushNamed('/playerselect/game', arguments: [red, blue, green, yellow]);
 
@@ -76,16 +75,77 @@ class _PlayerSelectScreenState extends State<PlayerSelectScreen>{
     );
   }
 
+  Widget _buildPlayerInput(width, pieceSize, color, nodeID, colorName){
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      textBaseline: TextBaseline.alphabetic,
+      mainAxisAlignment:  MainAxisAlignment.center,
+      children:[
+        Container(
+          width: width / 2,
+          height: pieceSize * 2,
+          margin: EdgeInsets.fromLTRB(10, 10, 2.5, 10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.all(Radius.circular(5)),
+          ),                             child:
+        TextFormField(
+          textInputAction: TextInputAction.next,
+          textAlign: TextAlign.center,
+          focusNode: focusNodes[nodeID],
+          onFieldSubmitted :(term){
+            _nextFocus(context, nodeID);
+          },
+          controller: controllers[colorName][0],
+          style: TextStyle(
+            fontSize: pieceSize * 1.5,
+          ),
+          decoration: InputDecoration.collapsed(
+            hintText: colorName,
+          ),
+        ),
+        ),
+
+        Container(
+          margin: EdgeInsets.fromLTRB(2.5, 10, 0, 10),
+          width: pieceSize * 2,
+          height: pieceSize * 2,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(topLeft: Radius.circular(20), bottomLeft: Radius.circular(20)),
+          ),
+          child: Icon(Icons.accessibility_new, color: color, size: pieceSize * 2,),
+        ),
+
+        Container(
+          width: pieceSize*2,
+          height: pieceSize * 2,
+          margin: EdgeInsets.fromLTRB(0, 10, 10, 10),
+          color: Colors.white,
+          child:
+          TextFormField(
+            keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.next,
+            textAlign: TextAlign.center,
+            focusNode: focusNodes[nodeID + 1],
+            onFieldSubmitted: (term){
+              _nextFocus(context, nodeID + 1);
+            },
+            controller: controllers[colorName][1],
+            style: TextStyle(
+              fontSize: pieceSize*2,
+            ),
+            decoration: InputDecoration.collapsed(
+              hintText: '1',
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   void dispose(){
-    redNameReader.dispose();
-    redCountReader.dispose();
-    blueNameReader.dispose();
-    blueCountReader.dispose();
-    greenNameReader.dispose();
-    greenCountReader.dispose();
-    yellowNameReader.dispose();
-    yellowCountReader.dispose();
     super.dispose();
   }
 
@@ -105,254 +165,10 @@ class _PlayerSelectScreenState extends State<PlayerSelectScreen>{
         body:ListView(
 
           children:[
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              textBaseline: TextBaseline.alphabetic,
-              mainAxisAlignment:  MainAxisAlignment.center,
-              children:[
-              Container(
-                width: width / 2,
-                margin: EdgeInsets.fromLTRB(10, 10, 2.5, 10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.all(Radius.circular(5)),
-                ),                child:
-                  TextFormField(
-                    textInputAction: TextInputAction.next,
-                    textAlign: TextAlign.center,
-                    focusNode: focusNodes[0],
-                    onFieldSubmitted :(term){
-                      _nextFocus(context, 0);
-                    },
-                    controller: redNameReader,
-                    style: TextStyle(
-                      fontSize: pieceSize,
-                    ),
-                    decoration: InputDecoration.collapsed(
-                      hintText: 'Punaiset',
-                    ),
-                  ),
-              ),
-
-              Container(
-                margin: EdgeInsets.fromLTRB(2.5, 10, 0, 10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(topLeft: Radius.circular(20), bottomLeft: Radius.circular(20)),
-                ),
-                child: Icon(Icons.accessibility_new, color: Colors.red, size:pieceSize*1.175),
-              ),
-
-              Container(
-                width: pieceSize,
-                margin: EdgeInsets.fromLTRB(0, 10, 10, 10),
-                color: Colors.white,
-                child:
-                  TextFormField(
-                    keyboardType: TextInputType.number,
-                    textInputAction: TextInputAction.next,
-                    textAlign: TextAlign.center,
-                    focusNode: focusNodes[1],
-                    onFieldSubmitted: (term){
-                      _nextFocus(context, 1);
-                    },
-                    controller: redCountReader,
-                    style: TextStyle(
-                      fontSize: pieceSize,
-                    ),
-                    decoration: InputDecoration.collapsed(
-                      hintText: '1',
-                    ),
-                  ),
-              ),
-            ],
-            ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              textBaseline: TextBaseline.alphabetic,
-              mainAxisAlignment:  MainAxisAlignment.center,
-              children:[
-                Container(
-                  width: width / 2,
-                  margin: EdgeInsets.fromLTRB(10, 10, 2.5, 10),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.all(Radius.circular(5)),
-                  ),                             child:
-                    TextFormField(
-                      textInputAction: TextInputAction.next,
-                      textAlign: TextAlign.center,
-                      focusNode: focusNodes[2],
-                      onFieldSubmitted :(term){
-                        _nextFocus(context, 2);
-                      },
-                      controller: blueNameReader,
-                      style: TextStyle(
-                        fontSize: pieceSize,
-                      ),
-                      decoration: InputDecoration.collapsed(
-                        hintText: 'Siniset',
-                      ),
-                  ),
-                ),
-
-                Container(
-                  margin: EdgeInsets.fromLTRB(2.5, 10, 0, 10),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(topLeft: Radius.circular(20), bottomLeft: Radius.circular(20)),
-                  ),
-                  child: Icon(Icons.accessibility_new, color: Colors.blue, size:pieceSize*1.175),
-                ),
-
-                Container(
-                  width: pieceSize,
-                  margin: EdgeInsets.fromLTRB(0, 10, 10, 10),
-                  color: Colors.white,
-                  child:
-                    TextFormField(
-                      keyboardType: TextInputType.number,
-                      textInputAction: TextInputAction.next,
-                      textAlign: TextAlign.center,
-                      focusNode: focusNodes[3],
-                      onFieldSubmitted: (term){
-                        _nextFocus(context, 3);
-                      },
-                      controller: blueCountReader,
-                      style: TextStyle(
-                        fontSize: pieceSize,
-                      ),
-                      decoration: InputDecoration.collapsed(
-                        hintText: '1',
-                      ),
-                  ),
-                ),
-              ],
-            ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              textBaseline: TextBaseline.alphabetic,
-              mainAxisAlignment:  MainAxisAlignment.center,
-              children:[
-                Container(
-                  width: width / 2,
-                  margin: EdgeInsets.fromLTRB(10, 10, 2.5, 10),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.all(Radius.circular(5)),
-                  ),                             child:
-                    TextFormField(
-                      textInputAction: TextInputAction.next,
-                      textAlign: TextAlign.center,
-                      focusNode: focusNodes[4],
-                      onFieldSubmitted :(term){
-                        _nextFocus(context, 4);
-                      },
-                      controller: greenNameReader,
-                      style: TextStyle(
-                        fontSize: pieceSize,
-                      ),
-                      decoration: InputDecoration.collapsed(
-                        hintText: 'Vihreät',
-                      ),
-                    ),
-                ),
-
-                Container(
-                  margin: EdgeInsets.fromLTRB(2.5, 10, 0, 10),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(topLeft: Radius.circular(20), bottomLeft: Radius.circular(20)),
-                  ),
-                  child: Icon(Icons.accessibility_new, color: Colors.green, size:pieceSize*1.175),
-                ),
-
-                Container(
-                  width: pieceSize,
-                  margin: EdgeInsets.fromLTRB(0, 10, 10, 10),
-                  color: Colors.white,
-                  child:
-                    TextFormField(
-                      keyboardType: TextInputType.number,
-                      textInputAction: TextInputAction.next,
-                      textAlign: TextAlign.center,
-                      focusNode: focusNodes[5],
-                      onFieldSubmitted: (term){
-                        _nextFocus(context, 5);
-                      },
-                      controller: greenCountReader,
-                      style: TextStyle(
-                        fontSize: pieceSize,
-                      ),
-                      decoration: InputDecoration.collapsed(
-                        hintText: '1',
-                      ),
-                    ),
-                ),
-              ],
-            ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              textBaseline: TextBaseline.alphabetic,
-              mainAxisAlignment:  MainAxisAlignment.center,
-              children:[
-                Container(
-                  width: width / 2,
-                  margin: EdgeInsets.fromLTRB(10, 10, 2.5, 10),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.all(Radius.circular(5)),
-                  ),                             child:
-                    TextFormField(
-                      textInputAction: TextInputAction.next,
-                      textAlign: TextAlign.center,
-                      focusNode: focusNodes[6],
-                      onFieldSubmitted :(term){
-                        _nextFocus(context, 6);
-                      },
-                      controller: yellowNameReader,
-                      style: TextStyle(
-                        fontSize: pieceSize,
-                      ),
-                      decoration: InputDecoration.collapsed(
-                        hintText: 'Keltaiset',
-                      ),
-                    ),
-                ),
-
-                Container(
-                  margin: EdgeInsets.fromLTRB(2.5, 10, 0, 10),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(topLeft: Radius.circular(20), bottomLeft: Radius.circular(20)),
-                  ),
-                  child: Icon(Icons.accessibility_new, color: Colors.yellow, size:pieceSize*1.175),
-                ),
-
-                Container(
-                  width: pieceSize,
-                  margin: EdgeInsets.fromLTRB(0, 10, 10, 10),
-                  color: Colors.white,
-                  child:
-                    TextFormField(
-                      keyboardType: TextInputType.number,
-                      textInputAction: TextInputAction.next,
-                      textAlign: TextAlign.center,
-                      focusNode: focusNodes[7],
-                      onFieldSubmitted: (term){
-                        _nextFocus(context, 7);
-                      },
-                      controller: yellowCountReader,
-                      style: TextStyle(
-                        fontSize: pieceSize,
-                      ),
-                      decoration: InputDecoration.collapsed(
-                        hintText: '1',
-                      ),
-                    ),
-                ),
-              ],
-            ),
+            _buildPlayerInput(width, pieceSize, Colors.red, 0, 'red'),
+            _buildPlayerInput(width, pieceSize, Colors.blue, 2, 'blue'),
+            _buildPlayerInput(width, pieceSize, Colors.green, 4, 'green'),
+            _buildPlayerInput(width, pieceSize, Colors.yellow, 6, 'yellow'),
             Container(
               margin: const EdgeInsets.fromLTRB(10,10,10,10),
               width: width / 2 - 20,
