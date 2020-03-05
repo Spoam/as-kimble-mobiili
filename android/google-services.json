@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "479879349923",
+    "firebase_url": "https://as-kimble.firebaseio.com",
+    "project_id": "as-kimble",
+    "storage_bucket": "as-kimble.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:479879349923:android:5d681abc0763077a",
+        "android_client_info": {
+          "package_name": "com.spoam.kimble"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "479879349923-43qng7vklg6sjr7qt38livtr8uektf95.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxAs1S18Rbl9jAb-JplTIGDHl9eiLOqyo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "479879349923-43qng7vklg6sjr7qt38livtr8uektf95.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

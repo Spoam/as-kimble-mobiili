@@ -8,7 +8,7 @@ class Player{
 
   Player(this.name,this.color, this.players);
 
-  final String name;
+  String name;
   final Color color;
   final int players;
 

@@ -14,9 +14,10 @@ description: as kimble
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.1.0 <3.0.0"
+  sdk: ">=2.3.0 <3.0.0"
 
 dependencies:
+  cloud_firestore: ^0.13.4
   audioplayers: ^0.13.1
   flutter:
     sdk: flutter

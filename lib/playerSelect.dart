@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kimble/player.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 
 class PlayerSelectScreen extends StatefulWidget{
 
@@ -7,6 +9,11 @@ class PlayerSelectScreen extends StatefulWidget{
   _PlayerSelectScreenState createState() => _PlayerSelectScreenState();
 }
 
+class Lobby extends PlayerSelectScreen{
+
+  @override
+  _LobbyState createState() => _LobbyState();
+}
 
 
 class _PlayerSelectScreenState extends State<PlayerSelectScreen>{
@@ -50,6 +57,10 @@ class _PlayerSelectScreenState extends State<PlayerSelectScreen>{
     }on FormatException catch(e){
       _showDialog(e.message);
     }
+  }
+
+  void _continue(){
+    //Navigator.of(context).pushNamed('/playerselect/game', arguments: [red, blue, green, yellow]);
   }
 
   void _showDialog(String message) {
@@ -192,6 +203,29 @@ class _PlayerSelectScreenState extends State<PlayerSelectScreen>{
                 child: Text('Aloita'),
               )
             ),
+            Container( //start button
+                margin: const EdgeInsets.fromLTRB(10,10,10,10),
+                width: width / 2 - 20,
+                decoration: BoxDecoration(
+                    color: Colors.blue,
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                    boxShadow:[
+                      BoxShadow(
+                          color: Colors.black54,
+                          offset: Offset(1,1),
+                          blurRadius: 0.5,
+                          spreadRadius: 0.5
+                      ),]
+                ),
+                child: MaterialButton(
+                  onPressed: (){
+                    setState(() {
+                      _continue();
+                    });
+                  },
+                  child: Text('jatka'),
+                )
+            ),
             FloatingActionButton(//back button
               onPressed:(){
               Navigator.pop(context);
@@ -202,4 +236,37 @@ class _PlayerSelectScreenState extends State<PlayerSelectScreen>{
         ),
       );
     }
+}
+
+
+class _LobbyState extends _PlayerSelectScreenState{
+
+  @override
+  void _startGame() async{
+
+    if(controllers['red'][0].text.isEmpty) controllers['red'][0].text = "Punaiset";
+    if(controllers['blue'][0].text.isEmpty) controllers['blue'][0].text = "Siniset";
+    if(controllers['green'][0].text.isEmpty) controllers['green'][0].text = "Vihreät";
+    if(controllers['yellow'][0].text.isEmpty) controllers['yellow'][0].text = "Keltaiset";
+
+
+
+    try{
+
+      Player red = Player(controllers['red'][0].text, Colors.red, int.parse(controllers['red'][1].text));
+      Player blue = Player(controllers['blue'][0].text, Colors.indigo, int.parse(controllers['blue'][1].text));
+      Player green = Player(controllers['green'][0].text, Colors.green, int.parse(controllers['green'][1].text));
+      Player yellow = Player(controllers['yellow'][0].text, Colors.yellow, int.parse(controllers['yellow'][1].text));
+
+      var db = Firestore.instance.collection('game');
+      Firestore.instance.collection('game').document('Red')
+          .setData({'name' : red.name, 'drinks' : 0, 'drunk' : 0, 'raises' : 0});
+
+      await Navigator.of(context).pushNamed('/playerselect/game', arguments: [red, blue, green, yellow]);
+
+
+    }on FormatException catch(e){
+      _showDialog(e.message);
+    }
+  }
 }
