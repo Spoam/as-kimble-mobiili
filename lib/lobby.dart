@@ -38,6 +38,7 @@ class _HostGame extends State<HostGame>{
   var sub;
 
   List<Player> players = [];
+  List<Color> localPlayers = [];
 
   final Map<String, List<TextEditingController>> controllers =
   {
@@ -88,7 +89,7 @@ class _HostGame extends State<HostGame>{
     //number of players in lobby. -1 because isActive document
     int index = snapshot.documents.length - 1;
 
-    ready.setRange(0, index, [true, true, true, true]);
+    ready.setRange(0, index - 1, [true, true, true, true]);
 
     //this means there is no host
     assert(index != 0);
@@ -113,6 +114,9 @@ class _HostGame extends State<HostGame>{
         //TODO error lobby is full
         return;
 
+      default:
+        return;
+
     }
 
     var db = Firestore.instance.collection(gameID.toString());
@@ -131,7 +135,16 @@ class _HostGame extends State<HostGame>{
       }
     });
 
-    Navigator.of(context).pushNamed('/playerselect/game', arguments: players);
+    //makes sure that player indexes are same for all users
+    List<Player> args = List(4);
+    args[0] = players.firstWhere((test) => test.color == Colors.red);
+    args[1] = players.firstWhere((test) => test.color == Colors.indigo);
+    args[2] = players.firstWhere((test) => test.color == Colors.green);
+    args[3] = players.firstWhere((test) => test.color == Colors.yellow);
+    //red is always local for testing purposes
+    //TODO remove for release
+    localPlayers.add(Colors.red);
+    Navigator.of(context).pushNamed('/playerselect/game', arguments: GameArguments(args, true, localPlayers, gameID));
   }
 
   void _waitForStart(){
@@ -139,9 +152,16 @@ class _HostGame extends State<HostGame>{
     CollectionReference reference = Firestore.instance.collection(gameID.toString());
     sub = reference.snapshots().listen((querySnapshot) {
       querySnapshot.documentChanges.forEach((change){
+
+        int index = querySnapshot.documents.length - 1;
+
+        if(index <= 4) ready.setRange(0, index, [true, true, true, true]);
+
         if(change.document.documentID == 'go'){
+          print("hei");
           _startGame();
         }
+
       });
     });
   }
@@ -342,7 +362,7 @@ class _HostGame extends State<HostGame>{
   Widget build(BuildContext context){
 
     if(first){
-      Arguments args = ModalRoute.of(context).settings.arguments;
+      JoinArguments args = ModalRoute.of(context).settings.arguments;
       gameID = args.id;
       host = args.host;
       String name = args.name;
@@ -429,7 +449,7 @@ class _JoinGame extends State<JoinGame> {
   TextEditingController teamSizeInput = TextEditingController(text: '1');
 
   void _join(){
-    Navigator.of(context).pushNamed('/join/lobby', arguments: Arguments(int.parse(gameIDInput.text), false, nameInput.text, int.parse(teamSizeInput.text)));
+    Navigator.of(context).pushNamed('/join/lobby', arguments: JoinArguments(int.parse(gameIDInput.text), false, nameInput.text, int.parse(teamSizeInput.text)));
   }
 
   void _host(){
@@ -437,7 +457,7 @@ class _JoinGame extends State<JoinGame> {
     if(teamSizeInput.text.isEmpty) return;
     if(gameIDInput.text.isEmpty) return;
 
-    Navigator.of(context).pushNamed('/join/lobby', arguments: Arguments(int.parse(gameIDInput.text), true, nameInput.text, int.parse(teamSizeInput.text)));
+    Navigator.of(context).pushNamed('/join/lobby', arguments: JoinArguments(int.parse(gameIDInput.text), true, nameInput.text, int.parse(teamSizeInput.text)));
   }
 
   Widget build(BuildContext context) {
@@ -596,10 +616,18 @@ class _JoinGame extends State<JoinGame> {
   }
 }
 
-class Arguments{
+class JoinArguments{
   final int id;
   final bool host;
   final String name;
   final int teamSize;
-  Arguments(this.id, this.host, this.name, this.teamSize);
+  JoinArguments(this.id, this.host, this.name, this.teamSize);
+}
+
+class GameArguments{
+  final List<Player> players;
+  final bool online;
+  final List<Color> localPlayers;
+  final int gameID;
+  GameArguments(this.players, this.online, this.localPlayers, this.gameID);
 }

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:kimble/lobby.dart';
 import 'package:kimble/piece.dart';
 import 'dart:math';
 import 'dart:core';
 import 'package:kimble/player.dart';
 import 'package:audioplayers/audio_cache.dart';
 import 'package:kimble/gameLogic.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:kimble/turnManager.dart';
 
 
 class GameWindow extends StatefulWidget {
@@ -25,6 +28,13 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
   GameLogic logic;
 
   List<Player> players;
+  List<Color> localPlayers;
+
+  bool online;
+  int gameID;
+  //database subscription
+  var sub;
+  List<TurnData> turnBuffer = [];
 
   AudioCache sound = AudioCache(prefix: 'sound/');
 
@@ -57,13 +67,13 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
     for (int i = 0; i < 44; i++) {
       if (i >= 28) {
         if ((i - 28) / 4 < 1) {
-          color = Colors.red;
+          color = players[0].color;
         } else if ((i - 28) / 4 < 2) {
-          color = Colors.indigo;
+          color = players[1].color;
         } else if ((i - 28) / 4 < 3) {
-          color = Colors.green;
+          color = players[2].color;
         } else if ((i - 28) / 4 < 4) {
-          color = Colors.yellow;
+          color = players[3].color;
         }
       }
 
@@ -84,6 +94,7 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
 
   void _rollDice(){
 
+    if(!localPlayers.contains(logic.turn.getCurrent())) return;
     logic.rollDice();
 
     //set selected piece to first movable
@@ -172,26 +183,26 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
         double x = (width / 6) - rowCenter + (pieceSize / sqrt(2)) * i;
         double y = (width / 6) + rowCenter - (pieceSize / sqrt(2)) * i;
 
-        placePiece(x, y, -1, i, Colors.red, 1, 0);
-        logic.pieceData[i] = PieceData(17, Colors.red, [x, y]);
+        placePiece(x, y, -1, i, players[0].color, 1, 0);
+        logic.pieceData[i] = PieceData(17, players[0].color, [x, y]);
       } else if (i / 4 < 2) {
         double x = (width - (width / 6)) - rowCenter + (pieceSize / sqrt(2)) * (i - 4);
         double y = (width / 6) - rowCenter + (pieceSize / sqrt(2)) * (i - 4);
 
-        placePiece(x, y, -1, i, Colors.indigo, 1, 0);
-        logic.pieceData[i] = PieceData(24, Colors.indigo, [x, y]);
+        placePiece(x, y, -1, i, players[1].color, 1, 0);
+        logic.pieceData[i] = PieceData(24, players[1].color, [x, y]);
       } else if (i / 4 < 3) {
         double x = (width - (width / 6)) - rowCenter + (pieceSize / sqrt(2)) * (i - 8);
         double y = (width - (width / 6)) + rowCenter - (pieceSize / sqrt(2)) * (i - 8);
 
-        placePiece(x, y,-1, i, Colors.green, 1, 0);
-        logic.pieceData[i] = PieceData(3, Colors.green, [x, y]);
+        placePiece(x, y,-1, i, players[2].color, 1, 0);
+        logic.pieceData[i] = PieceData(3, players[2].color, [x, y]);
       } else if (i / 4 < 4) {
         double x = (width / 6) - rowCenter + (pieceSize / sqrt(2)) * (i - 12);
         double y = (width - (width / 6)) - rowCenter + (pieceSize / sqrt(2)) * (i - 12);
 
-        placePiece(x, y, -1, i, Colors.yellow, 1, 0);
-        logic.pieceData[i] = PieceData(10, Colors.yellow, [x, y]);
+        placePiece(x, y, -1, i, players[3].color, 1, 0);
+        logic.pieceData[i] = PieceData(10, players[3].color, [x, y]);
       }
     }
   }
@@ -209,6 +220,21 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
       _handleRadioValueChange(-1);
       if(logic.diceVal != 6) controller.forward();
     });
+
+  }
+
+  void _turnFromDatabase(){
+
+    print("turnfrom database");
+
+    if(turnBuffer.isEmpty) return;
+
+    turnBuffer.sort((a, b) => a.turn.compareTo(b.turn));
+    setState(() {
+      _handleTurn(turnBuffer[0].pieceId);
+    });
+
+    turnBuffer.removeAt(0);
 
   }
 
@@ -273,6 +299,22 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
     );
   }
 
+  void _readFromDatabase(){
+    CollectionReference reference = Firestore.instance.collection(gameID.toString()).document("turns").collection("turn");
+    sub = reference.snapshots().listen((querySnapshot) {
+      querySnapshot.documentChanges.forEach((change){
+        var data = change.document.data;
+        turnBuffer.add(TurnData(data['turnCount'], data['color'], data['diceVal'], data['pieceId']));
+        print(change.document.documentID);
+
+        if(!localPlayers.contains(logic.turn.getCurrent())){
+          _turnFromDatabase();
+        }
+
+      });
+    });
+  }
+
   @override
   void initState(){
     super.initState();
@@ -330,7 +372,15 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
 
       double width = MediaQuery.of(context).size.width - 20;
 
-      players = ModalRoute.of(context).settings.arguments;
+      GameArguments args = ModalRoute.of(context).settings.arguments;
+
+      players = args.players;
+
+      localPlayers = args.localPlayers;
+
+      online = args.online;
+      gameID = args.gameID;
+
 
       logic = GameLogic(players, placePiece, sound);
 
@@ -339,7 +389,13 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
 
       _createBoardIcons();
 
+      if(online) _readFromDatabase();
+
       first = false;
+    }
+
+    if(online && !localPlayers.contains(logic.turn.getCurrent())){
+      _turnFromDatabase();
     }
 
     //add all board widgets to a single list
@@ -404,7 +460,7 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
               children:boardStack,
             ),
 
-            logic.getLegalMoves().contains(true) ? Container(
+            logic.getLegalMoves().contains(true) && localPlayers.contains(logic.turn.getCurrent()) ? Container(
               height: 70,
               margin: const EdgeInsets.fromLTRB(10,5,10,5),
               decoration: BoxDecoration(
@@ -521,10 +577,10 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
             ),
 
             //player info starts
-            _buildPlayerInfo(Colors.red),
-            _buildPlayerInfo(Colors.indigo),
-            _buildPlayerInfo(Colors.green),
-            _buildPlayerInfo(Colors.yellow),
+            _buildPlayerInfo(players[0].color),
+            _buildPlayerInfo(players[1].color),
+            _buildPlayerInfo(players[2].color),
+            _buildPlayerInfo(players[3].color),
           ],
 
         )

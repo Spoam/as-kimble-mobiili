@@ -14,6 +14,6 @@ Color getColorFromString(String color){
       return Colors.green;
 
     default:
-      return Colors.pinkAccent;
+      return Colors.brown;
   }
 }

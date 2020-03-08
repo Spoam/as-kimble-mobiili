@@ -35,3 +35,13 @@ class Turn{
     }
   }
 }
+
+class TurnData{
+
+  final int turn;
+  final String colorStr;
+  final int diceVal;
+  final int pieceId;
+
+  TurnData(this.turn, this.colorStr, this.diceVal, this.pieceId);
+}

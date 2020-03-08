@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kimble/lobby.dart';
 import 'package:kimble/player.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -52,7 +53,7 @@ class _PlayerSelectScreenState extends State<PlayerSelectScreen>{
       Player green = Player(controllers['green'][0].text, Colors.green, int.parse(controllers['green'][1].text));
       Player yellow = Player(controllers['yellow'][0].text, Colors.yellow, int.parse(controllers['yellow'][1].text));
 
-      Navigator.of(context).pushNamed('/playerselect/game', arguments: [red, blue, green, yellow]);
+      Navigator.of(context).pushNamed('/playerselect/game', arguments: GameArguments([red, blue, green, yellow], false, [Colors.red, Colors.indigo, Colors.green, Colors.yellow], 0));
 
     }on FormatException catch(e){
       _showDialog(e.message);
