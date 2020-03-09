@@ -311,12 +311,12 @@ class GameLogic{
     placePiece(pieceData[index].homePos[0], pieceData[index].homePos[1], -1, index, pieceData[index].color,pieceData[index].multiplier, 400);
   }
 
-  void handleTurn(int idx){
+  void handleTurn(int idx, diceRoll){
 
-
-    if(idx != null) _movePiece(idx, diceVal);
+    if(diceRoll == -1) diceRoll = diceVal;
+    if(idx != null) _movePiece(idx, diceRoll);
     //6 = new turn
-    if(diceVal != 6){
+    if(diceRoll != 6){
 
       turn.nextTurn();
       attempts = 0;

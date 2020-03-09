@@ -56,6 +56,7 @@ flutter:
     - assets/sound/mine1.mp3
     - assets/sound/mine2.mp3
     - assets/sound/eat1.mp3
+    - assets/sound/korotus_cheer.mp3
 
   #  - images/a_dot_ham.jpeg
 

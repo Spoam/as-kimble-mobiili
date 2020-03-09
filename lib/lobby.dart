@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:kimble/player.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -27,6 +28,7 @@ class _HostGame extends State<HostGame>{
   Random rand = Random(DateTime.now().microsecond);
 
   int gameID;
+  String oldName;
 
   bool host = false;
 
@@ -48,6 +50,9 @@ class _HostGame extends State<HostGame>{
     'yellow' : [TextEditingController(), TextEditingController(text: '1')]
   };
 
+  TextEditingController localPlayerNameInput = TextEditingController();
+  TextEditingController localPlayerCountInput = TextEditingController(text: '1');
+
   TextEditingController nameInput = TextEditingController();
 
 
@@ -67,7 +72,7 @@ class _HostGame extends State<HostGame>{
     //can't host game with same id unless the game is no longer active
     if (snapshot != null && snapshot.exists) {
       if(snapshot.data['isActive'] == 1){
-        //TODO error message here
+        _showDialog("A lobby with that ID already exists");
         return;
       }
     }
@@ -75,7 +80,8 @@ class _HostGame extends State<HostGame>{
     var db = Firestore.instance.collection(gameID.toString());
     db.document('isActive').setData({'isActive' : 1});
     db.document('red').setData({'color' : 'red', 'name' : name, 'team' : teamSize, 'drinks' : 0, 'drunk' : 0, 'raises' : 0});
-    players.add(Player(name, Colors.red, teamSize));
+    //players.add(Player(name, Colors.red, teamSize));
+    localPlayers.add(Colors.red);
     ready[0] = true;
 
   }
@@ -111,7 +117,7 @@ class _HostGame extends State<HostGame>{
         break;
 
       case 4:
-        //TODO error lobby is full
+        _showDialog("Lobby is full");
         return;
 
       default:
@@ -121,11 +127,12 @@ class _HostGame extends State<HostGame>{
 
     var db = Firestore.instance.collection(gameID.toString());
     db.document(color).setData({'color' : color, 'name' : name, 'team' : teamSize,'drinks' : 0, 'drunk' : 0, 'raises' : 0});
-    players.add(Player(name, getColorFromString(color), teamSize));
+    //players.add(Player(name, getColorFromString(color), teamSize));
+    localPlayers.add(getColorFromString(color));
     ready[index] = true;
   }
 
-  void _startGame()async{
+  void _startGame(bool cont) async{
 
     QuerySnapshot snapshot = await Firestore.instance.collection(gameID.toString()).getDocuments();
 
@@ -141,11 +148,13 @@ class _HostGame extends State<HostGame>{
     args[1] = players.firstWhere((test) => test.color == Colors.indigo);
     args[2] = players.firstWhere((test) => test.color == Colors.green);
     args[3] = players.firstWhere((test) => test.color == Colors.yellow);
-    //red is always local for testing purposes
-    //TODO remove for release
-    localPlayers.add(Colors.red);
-    Navigator.of(context).pushNamed('/playerselect/game', arguments: GameArguments(args, true, localPlayers, gameID));
+
+    //continue playing as the correct player
+    if(cont) localPlayers.add(players.firstWhere((p) => p.name == oldName).color);
+    
+    Navigator.of(context).pushNamed('/playerselect/game', arguments: GameArguments(args, true, localPlayers, args[0].color, gameID));
   }
+
 
   void _waitForStart(){
     int timesTriggered = 0;
@@ -158,8 +167,7 @@ class _HostGame extends State<HostGame>{
         if(index <= 4) ready.setRange(0, index, [true, true, true, true]);
 
         if(change.document.documentID == 'go'){
-          print("hei");
-          _startGame();
+          _startGame(false);
         }
 
       });
@@ -177,14 +185,14 @@ class _HostGame extends State<HostGame>{
       builder: (BuildContext context) {
         // return object of type Dialog
         return AlertDialog(
-          title: new Text("Viallinen pelaajamäärä"),
+          title: new Text("Failed to connect"),
           content: new Text(message),
           actions: <Widget>[
             // usually buttons at the bottom of the dialog
             new FlatButton(
-              child: new Text("Close"),
+              child: new Text("Back"),
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(context).popUntil(ModalRoute.withName('/join'));
               },
             ),
           ],
@@ -211,7 +219,7 @@ class _HostGame extends State<HostGame>{
       mainAxisAlignment:  MainAxisAlignment.center,
       children:[
         Container(
-          width: width / 2,
+          width: width / 1.1,
           height: pieceSize * 2,
           margin: EdgeInsets.fromLTRB(10, 10, 2.5, 10),
           decoration: BoxDecoration(
@@ -219,13 +227,13 @@ class _HostGame extends State<HostGame>{
             borderRadius: BorderRadius.all(Radius.circular(5)),
           ),                             child:
         TextFormField(
-          textInputAction: TextInputAction.next,
           textAlign: TextAlign.center,
+          controller: localPlayerNameInput,
+          textInputAction: TextInputAction.next,
           focusNode: focusNodes[nodeID],
-          onFieldSubmitted :(term){
+          onFieldSubmitted: (term){
             _nextFocus(context, nodeID);
           },
-          controller: controllers[colorName][0],
           style: TextStyle(
             fontSize: pieceSize * 1.5,
           ),
@@ -254,13 +262,13 @@ class _HostGame extends State<HostGame>{
           child:
           TextFormField(
             keyboardType: TextInputType.number,
-            textInputAction: TextInputAction.next,
             textAlign: TextAlign.center,
+            textInputAction: TextInputAction.next,
             focusNode: focusNodes[nodeID + 1],
             onFieldSubmitted: (term){
               _nextFocus(context, nodeID + 1);
             },
-            controller: controllers[colorName][1],
+            controller: localPlayerCountInput,
             style: TextStyle(
               fontSize: pieceSize*2,
             ),
@@ -268,6 +276,23 @@ class _HostGame extends State<HostGame>{
               hintText: '1',
             ),
           ),
+        ),
+        Container(
+          width: pieceSize*2,
+          height: pieceSize * 2,
+          margin: EdgeInsets.fromLTRB(0, 10, 10, 10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.all(Radius.circular(10)),
+          ),
+          child:
+            MaterialButton(
+              onPressed:(){
+                _joinLobby(localPlayerNameInput.text, int.parse(localPlayerCountInput.text));
+                localPlayerNameInput.clear();
+              },
+              child:Text('+', textScaleFactor: 3,),
+            ),
         ),
       ],
     );
@@ -364,14 +389,17 @@ class _HostGame extends State<HostGame>{
     if(first){
       JoinArguments args = ModalRoute.of(context).settings.arguments;
       gameID = args.id;
-      host = args.host;
+      JoinType type = args.type;
       String name = args.name;
       int teamSize = args.teamSize;
 
-      if(host){
+      if(type == JoinType.HOST){
         _startHosting(name, teamSize);
-      }else{
+      }else if(type == JoinType.JOIN){
         _joinLobby(name, teamSize);
+      }else if(type == JoinType.CONTINUE){
+        oldName = name;
+        _startGame(true);
       }
       _waitForStart();
       first = false;
@@ -427,7 +455,7 @@ class _HostGame extends State<HostGame>{
                 },
                 child: Text('Aloita'),
               )
-          ): Container(),
+          ): _buildPlayerInput(width / 2, Colors.black54, 0, "add local player"),
           FloatingActionButton(//back button
             onPressed:(){
               Navigator.pop(context);
@@ -448,16 +476,11 @@ class _JoinGame extends State<JoinGame> {
   TextEditingController gameIDInput = TextEditingController();
   TextEditingController teamSizeInput = TextEditingController(text: '1');
 
-  void _join(){
-    Navigator.of(context).pushNamed('/join/lobby', arguments: JoinArguments(int.parse(gameIDInput.text), false, nameInput.text, int.parse(teamSizeInput.text)));
-  }
-
-  void _host(){
+  void _join(JoinType type){
     if(nameInput.text.isEmpty) return;
     if(teamSizeInput.text.isEmpty) return;
     if(gameIDInput.text.isEmpty) return;
-
-    Navigator.of(context).pushNamed('/join/lobby', arguments: JoinArguments(int.parse(gameIDInput.text), true, nameInput.text, int.parse(teamSizeInput.text)));
+    Navigator.of(context).pushNamed('/join/lobby', arguments: JoinArguments(int.parse(gameIDInput.text), type, nameInput.text, int.parse(teamSizeInput.text)));
   }
 
   Widget build(BuildContext context) {
@@ -485,18 +508,18 @@ class _JoinGame extends State<JoinGame> {
             color: Colors.white,
             borderRadius: BorderRadius.all(Radius.circular(5)),
           ),
-        child: TextFormField(
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            controller: gameIDInput,
-            style: TextStyle(
-              fontSize: pieceSize*1.5,
-            ),
-            decoration: InputDecoration.collapsed(
-              hintText: 'game id',
+          child: TextFormField(
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              controller: gameIDInput,
+              style: TextStyle(
+                fontSize: pieceSize*1.5,
+              ),
+              decoration: InputDecoration.collapsed(
+                hintText: 'game id',
 
-            )
-          ),
+              )
+            ),
         ),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -574,7 +597,7 @@ class _JoinGame extends State<JoinGame> {
               child: MaterialButton(
                 onPressed: () {
                   setState(() {
-                    _join();
+                    _join(JoinType.JOIN);
                   });
                 },
                 child: Text('Join'),
@@ -598,10 +621,34 @@ class _JoinGame extends State<JoinGame> {
               child: MaterialButton(
                 onPressed: () {
                   setState(() {
-                    _host();
+                    _join(JoinType.HOST);
                   });
                 },
                 child: Text('Host'),
+              )
+          ),
+          Container( //start button
+              margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+              width: width / 2 - 20,
+              decoration: BoxDecoration(
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black54,
+                        offset: Offset(1, 1),
+                        blurRadius: 0.5,
+                        spreadRadius: 0.5
+                    ),
+                  ]
+              ),
+              child: MaterialButton(
+                onPressed: () {
+                  setState(() {
+                    _join(JoinType.CONTINUE);
+                  });
+                },
+                child: Text('Continue'),
               )
           ),
           FloatingActionButton( //back button
@@ -618,10 +665,10 @@ class _JoinGame extends State<JoinGame> {
 
 class JoinArguments{
   final int id;
-  final bool host;
+  final JoinType type;
   final String name;
   final int teamSize;
-  JoinArguments(this.id, this.host, this.name, this.teamSize);
+  JoinArguments(this.id, this.type, this.name, this.teamSize);
 }
 
 class GameArguments{
@@ -629,5 +676,12 @@ class GameArguments{
   final bool online;
   final List<Color> localPlayers;
   final int gameID;
-  GameArguments(this.players, this.online, this.localPlayers, this.gameID);
+  final Color host;
+  GameArguments(this.players, this.online, this.localPlayers, this.host, this.gameID);
+}
+
+enum JoinType{
+  HOST,
+  JOIN,
+  CONTINUE
 }

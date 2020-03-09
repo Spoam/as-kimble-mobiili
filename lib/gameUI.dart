@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kimble/colors.dart';
 import 'package:kimble/lobby.dart';
 import 'package:kimble/piece.dart';
 import 'dart:math';
@@ -32,9 +33,12 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
 
   bool online;
   int gameID;
+  Color host;
   //database subscription
-  var sub;
+  var turnSub;
+  var drinkSub;
   List<TurnData> turnBuffer = [];
+  int turnsHandled = 0;
 
   AudioCache sound = AudioCache(prefix: 'sound/');
 
@@ -102,7 +106,11 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
     if(idx != -1){
       _handleRadioValueChange(3 - idx);
     }else if(logic.getDiceStatus()){
-      _handleTurn(null);
+      if(online){
+        _writeToDatabase(-1);
+      }else{
+        _handleTurn(null, -1);
+      }
     }
   }
 
@@ -208,9 +216,13 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
   }
 
 
-  void _handleTurn(int idx){
+  void _handleTurn(int idx, int diceRoll){
 
-    logic.handleTurn(idx);
+    if(idx != null){
+      idx = idx < 0 ? null : idx;
+    }
+
+    logic.handleTurn(idx, diceRoll);
 
     if(logic.isWinner()){ Navigator.of(context).pushNamed('/playerselect/game/end', arguments: players);}
     //cosmetic. hides piece selection before dice is rolled
@@ -220,18 +232,19 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
       _handleRadioValueChange(-1);
       if(logic.diceVal != 6) controller.forward();
     });
-
+    turnsHandled++;
   }
 
   void _turnFromDatabase(){
-
-    print("turnfrom database");
 
     if(turnBuffer.isEmpty) return;
 
     turnBuffer.sort((a, b) => a.turn.compareTo(b.turn));
     setState(() {
-      _handleTurn(turnBuffer[0].pieceId);
+      if(turnBuffer[0].pieceId == -2){
+        logic.raise();
+      }
+      _handleTurn(turnBuffer[0].pieceId, turnBuffer[0].diceVal);
     });
 
     turnBuffer.removeAt(0);
@@ -276,15 +289,25 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
                     Row(
                       children:logic.getPlayerByColor(col).getPlayerInfo(pieceSize),
                     ),
-                    IconButton(
+                    logic.turn.getCurrent() == host ? IconButton(
                       icon: Icon(Icons.plus_one,size: pieceSize),
                       onPressed: (){
                         setState((){
-                          logic.getPlayerByColor(col).drunk++;
-                          if(logic.checkWin(col)) Navigator.of(context).pushNamed('/playerselect/game/end', arguments: players);
+                          if(logic.getPlayerByColor(col).drunk < logic.getPlayerByColor(col).drinks){
+                            if(online){
+                              setState(() {
+                                logic.getPlayerByColor(col).drunk++;
+                                _addDrinkToDatabase(getStringFromColor(col) ,true);
+                              });
+                            }else{
+                              logic.getPlayerByColor(col).drunk++;
+                            }
+                            if(logic.checkWin(col)) Navigator.of(context).pushNamed('/playerselect/game/end', arguments: players);
+                          }
+
                         });
                       },
-                    )
+                    ): Container()
                   ]
               ),
             );
@@ -299,20 +322,48 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
     );
   }
 
-  void _readFromDatabase(){
-    CollectionReference reference = Firestore.instance.collection(gameID.toString()).document("turns").collection("turn");
-    sub = reference.snapshots().listen((querySnapshot) {
+  void _listenForDrinks(){
+    CollectionReference reference = Firestore.instance.collection(gameID.toString());
+    drinkSub = reference.snapshots().listen((querySnapshot) {
       querySnapshot.documentChanges.forEach((change){
-        var data = change.document.data;
-        turnBuffer.add(TurnData(data['turnCount'], data['color'], data['diceVal'], data['pieceId']));
-        print(change.document.documentID);
-
-        if(!localPlayers.contains(logic.turn.getCurrent())){
-          _turnFromDatabase();
+        var doc = change.document;
+        if(getColorFromString(doc.documentID) != Colors.brown){
+          print(change.document.documentID);
+          Player p = logic.getPlayerByColor(getColorFromString(doc.documentID));
+          p.drunk = doc.data['drunk'];
         }
 
       });
     });
+  }
+
+  void _addDrinkToDatabase(String color, bool drink) {
+    CollectionReference col = Firestore.instance.collection(gameID.toString());
+    if (drink) {
+      col.document(color).updateData({'drunk': logic
+          .getPlayerByColor(getColorFromString(color))
+          .drunk});
+    }
+  }
+
+
+
+  void _readFromDatabase(){
+    CollectionReference reference = Firestore.instance.collection(gameID.toString()).document("turns").collection("turn");
+    turnSub = reference.snapshots().listen((querySnapshot) {
+      querySnapshot.documentChanges.forEach((change){
+        var data = change.document.data;
+        turnBuffer.add(TurnData(data['turnCount'], data['color'], data['diceVal'], data['pieceId']));
+        print(change.document.documentID);
+        _turnFromDatabase();
+
+      });
+    });
+  }
+
+  void _writeToDatabase(int pieceId){
+    DocumentReference doc = Firestore.instance.collection(gameID.toString()).document("turns").collection("turn").document();
+    doc.setData({'turnCount' : turnsHandled, 'color' : "INSERT COLOR HERE", 'pieceId': pieceId, 'diceVal' : logic.diceVal});
   }
 
   @override
@@ -322,6 +373,7 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
     sound.load('naks-koko-2.mp3');
     sound.load('naks-up-1.mp3');
     sound.load('naks-down1.mp3');
+    sound.load('korotus_cheer.mp3');
     sound.disableLog();
 
     controller = AnimationController(
@@ -351,6 +403,14 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
 
   @override
   dispose(){
+
+    CollectionReference col = Firestore.instance.collection(gameID.toString());
+    players.forEach((p) =>{
+      col.document(getStringFromColor(p.color)).updateData({'drinks' : logic.getPlayerByColor(p.color).drinks})
+    });
+
+    turnSub.cancel();
+    drinkSub.cancel();
     controller.dispose();
     super.dispose();
   }
@@ -380,7 +440,7 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
 
       online = args.online;
       gameID = args.gameID;
-
+      host = args.host;
 
       logic = GameLogic(players, placePiece, sound);
 
@@ -389,10 +449,13 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
 
       _createBoardIcons();
 
-      if(online) _readFromDatabase();
+      if(online) {
+        _readFromDatabase();
+        _listenForDrinks();
+      }
 
-      first = false;
-    }
+        first = false;
+      }
 
     if(online && !localPlayers.contains(logic.turn.getCurrent())){
       _turnFromDatabase();
@@ -452,138 +515,172 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
     );
     boardStack.add(turnText);
 
-    return Scaffold(
-        backgroundColor: logic.turn.getCurrent(),
-        body:ListView(
-          children:[
-            Stack(
-              children:boardStack,
-            ),
-
-            logic.getLegalMoves().contains(true) && localPlayers.contains(logic.turn.getCurrent()) ? Container(
-              height: 70,
-              margin: const EdgeInsets.fromLTRB(10,5,10,5),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.all(Radius.circular(10)),
+    return WillPopScope(
+        child: Scaffold(
+          backgroundColor: logic.turn.getCurrent(),
+          body:ListView(
+            children:[
+              Stack(
+                children:boardStack,
               ),
-              child:Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: <Widget>[
-                  logic.getLegalMoves()[0] ? Column(
-                    children:[
-                      Radio(
-                        value: 0,
-                        groupValue: _radioGroupVal,
-                        onChanged: _handleRadioValueChange,
+
+              logic.getLegalMoves().contains(true) && localPlayers.contains(logic.turn.getCurrent()) ? Container(
+                height: 70,
+                margin: const EdgeInsets.fromLTRB(10,5,10,5),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                ),
+                child:Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: <Widget>[
+                    logic.getLegalMoves()[0] ? Column(
+                      children:[
+                        Radio(
+                          value: 0,
+                          groupValue: _radioGroupVal,
+                          onChanged: _handleRadioValueChange,
+                          ),
+                          logic.getStatusText(0),
+                        ]
+                    ): Container(),
+
+                    logic.getLegalMoves()[1] ? Column(
+                      children:[
+                        Radio(
+                          value: 1,
+                          groupValue: _radioGroupVal,
+                          onChanged: _handleRadioValueChange,
                         ),
-                        logic.getStatusText(0),
+                        logic.getStatusText(1),
                       ]
-                  ): Container(),
+                    ) : Container(),
 
-                  logic.getLegalMoves()[1] ? Column(
-                    children:[
-                      Radio(
-                        value: 1,
-                        groupValue: _radioGroupVal,
-                        onChanged: _handleRadioValueChange,
+                    logic.getLegalMoves()[2] ? Column(
+                      children:[
+                        Radio(
+                          value: 2,
+                          groupValue: _radioGroupVal,
+                          onChanged: _handleRadioValueChange,
+                         ),
+                        logic.getStatusText(2),
+                      ]
+                    ) : Container(),
+
+                    logic.getLegalMoves()[3] ? Column(
+                      children:[
+                        Radio(
+                          value: 3,
+                          groupValue: _radioGroupVal,
+                          onChanged: _handleRadioValueChange,
+                        ),
+                        //no need to check for doubling because first piece can never double
+                        logic.getStatusText(3),
+                      ]
+                    ) : Container(),
+                  ],
+
+                ),
+              ): Container(),
+
+              Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children:[
+                    logic.getDiceStatus() ?  Container(
+                      margin: const EdgeInsets.fromLTRB(10,5,2.5,5),
+                      width: width / 2 - 20,
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                          boxShadow:[
+                            BoxShadow(
+                                color: Colors.black54,
+                                offset: Offset(1,1),
+                                blurRadius: 0.5,
+                                spreadRadius: 0.5
+                            ),]
                       ),
-                      logic.getStatusText(1),
-                    ]
-                  ) : Container(),
+                      child: MaterialButton(
+                        onPressed: (){
+                          setState(() {
 
-                  logic.getLegalMoves()[2] ? Column(
-                    children:[
-                      Radio(
-                        value: 2,
-                        groupValue: _radioGroupVal,
-                        onChanged: _handleRadioValueChange,
-                       ),
-                      logic.getStatusText(2),
-                    ]
-                  ) : Container(),
+                            if(online){
 
-                  logic.getLegalMoves()[3] ? Column(
-                    children:[
-                      Radio(
-                        value: 3,
-                        groupValue: _radioGroupVal,
-                        onChanged: _handleRadioValueChange,
+                              _writeToDatabase(selectedPiece);
+
+                            }else{
+
+                              if(logic.getLegalMoves().contains(true)) {
+                                _handleTurn(selectedPiece, -1);
+                              }else{
+                                _handleTurn(null, -1);
+                              }
+                            }
+
+
+                          });
+                        },
+                        child: Text('Liiku'),
                       ),
-                      //no need to check for doubling because first piece can never double
-                      logic.getStatusText(3),
-                    ]
-                  ) : Container(),
-                ],
-
-              ),
-            ): Container(),
-
-            Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children:[
-                  logic.getDiceStatus() ?  Container(
-                    margin: const EdgeInsets.fromLTRB(10,5,2.5,5),
-                    width: width / 2 - 20,
-                    decoration: BoxDecoration(
+                    ) : Container(),
+                    logic.canRaise ? Container(
+                      margin: const EdgeInsets.fromLTRB(2.5,5,10,5),
+                      width: width / 2 - 20,
+                      decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.all(Radius.circular(10)),
-                        boxShadow:[
-                          BoxShadow(
-                              color: Colors.black54,
-                              offset: Offset(1,1),
-                              blurRadius: 0.5,
-                              spreadRadius: 0.5
-                          ),]
-                    ),
-                    child: MaterialButton(
-                      onPressed: (){
-                        setState(() {
-                          if(logic.getLegalMoves().contains(true)) {
-                            _handleTurn(selectedPiece);
-                          }else{
-                            _handleTurn(null);
-                          }
-                        });
-                      },
-                      child: Text('Liiku'),
-                    ),
-                  ) : Container(),
-                  logic.canRaise ? Container(
-                    margin: const EdgeInsets.fromLTRB(2.5,5,10,5),
-                    width: width / 2 - 20,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                        boxShadow:[
-                          BoxShadow(
-                              color: Colors.black54,
-                              offset: Offset(1,1),
-                              blurRadius: 0.5,
-                              spreadRadius: 0.5
-                          ),]
-                    ),
-                    child: MaterialButton(
-                      onPressed: (){
-                        setState(() {
-                          logic.raise();
-                          _handleTurn(null);
-                        });
-                      },
-                      child: Text('Korota'),
-                    ),
-                  ) : Container(),
-                ]
-            ),
+                          boxShadow:[
+                            BoxShadow(
+                                color: Colors.black54,
+                                offset: Offset(1,1),
+                                blurRadius: 0.5,
+                                spreadRadius: 0.5
+                            ),]
+                      ),
+                      child: MaterialButton(
+                        onPressed: (){
+                          setState(() {
+                            sound.play('korotus_cheer.mp3');
+                            if(online){
+                              _writeToDatabase(-2);
+                            }else{
+                              logic.raise();
+                            }
+                            _handleTurn(null, -1);
+                          });
+                        },
+                        child: Text('Korota'),
+                      ),
+                    ) : Container(),
+                  ]
+              ),
 
-            //player info starts
-            _buildPlayerInfo(players[0].color),
-            _buildPlayerInfo(players[1].color),
-            _buildPlayerInfo(players[2].color),
-            _buildPlayerInfo(players[3].color),
-          ],
+              //player info starts
+              _buildPlayerInfo(players[0].color),
+              _buildPlayerInfo(players[1].color),
+              _buildPlayerInfo(players[2].color),
+              _buildPlayerInfo(players[3].color),
+            ],
 
-        )
+          )
+      ),
+        onWillPop: () => showDialog<bool>(
+          context: context,
+          builder: (c) => AlertDialog(
+            title: Text('Warning'),
+            content: Text('Haluatko lopettaa pelin?'),
+            actions: [
+              FlatButton(
+                child: Text('Joo'),
+                onPressed: () => Navigator.of(context).popUntil(ModalRoute.withName('/join')),
+              ),
+              FlatButton(
+                child: Text('En'),
+                onPressed: () => Navigator.pop(c, false),
+              ),
+            ],
+          ),
+        ),
     );
     }
   }

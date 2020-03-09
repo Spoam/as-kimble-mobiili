@@ -17,3 +17,11 @@ Color getColorFromString(String color){
       return Colors.brown;
   }
 }
+
+String getStringFromColor(Color color){
+
+  var pairs = {Colors.red : 'red', Colors.indigo: 'blue', Colors.green : 'green', Colors.yellow : 'yellow'};
+
+  return pairs[color];
+
+}
