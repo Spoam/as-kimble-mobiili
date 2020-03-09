@@ -392,11 +392,14 @@ class _HostGame extends State<HostGame>{
       JoinType type = args.type;
       String name = args.name;
       int teamSize = args.teamSize;
+      host = type == JoinType.HOST;
 
       if(type == JoinType.HOST){
         _startHosting(name, teamSize);
+
       }else if(type == JoinType.JOIN){
         _joinLobby(name, teamSize);
+
       }else if(type == JoinType.CONTINUE){
         oldName = name;
         _startGame(true);
@@ -433,7 +436,7 @@ class _HostGame extends State<HostGame>{
             ),
           ),
           _playerStream(),
-          ready.every( (elem) => elem ) ? Container( //start button
+          ready.every( (elem) => elem ) && host ? Container( //start button
               margin: const EdgeInsets.fromLTRB(10,10,10,10),
               width: width / 2 - 20,
               decoration: BoxDecoration(
@@ -455,7 +458,10 @@ class _HostGame extends State<HostGame>{
                 },
                 child: Text('Aloita'),
               )
-          ): _buildPlayerInput(width / 2, Colors.black54, 0, "add local player"),
+          ): Container(),
+
+          ready.contains(false) ? _buildPlayerInput(width / 2, Colors.black54, 0, "add local player"): Container(),
+
           FloatingActionButton(//back button
             onPressed:(){
               Navigator.pop(context);
@@ -645,7 +651,8 @@ class _JoinGame extends State<JoinGame> {
               child: MaterialButton(
                 onPressed: () {
                   setState(() {
-                    _join(JoinType.CONTINUE);
+                    //TODO fix this shit
+                    //_join(JoinType.CONTINUE);
                   });
                 },
                 child: Text('Continue'),
