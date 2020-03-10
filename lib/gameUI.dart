@@ -20,7 +20,7 @@ class GameWindow extends StatefulWidget {
 
 }
 
-class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateMixin{
+class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
 
   List<AnimatedPositioned> pieceIcons = new List(16);
   List<List<double>> board = new List(28 + 16);
@@ -43,10 +43,14 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
   AudioCache sound = AudioCache(prefix: 'sound/');
 
   AnimationController controller;
+  AnimationController diceController;
+  Animation<double> diceAnimation;
   Animation<double> slideAnimation;
 
   double turnTextAnimOffset = 0;
   Duration animDuration = Duration(milliseconds: 0);
+  Duration diceAnimDur = Duration(milliseconds: 100);
+  double diceAnim = 0;
 
   void _initBoard(double width) {
     for (int i = 0; i < 28; i++) {
@@ -127,6 +131,7 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
   }
 
   void _longPress(){
+    diceController.forward();
     sound.play('naks-down1.mp3');
   }
 
@@ -139,7 +144,7 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
         onTapUp: _tapUp,
         onLongPress: _longPress,
         onTap: () {
-
+          diceController.forward();
           sound.play('naks-koko-2.mp3');
 
           setState(() {
@@ -147,8 +152,8 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
           });
         },
         child: Container(
-            width: pieceSize * 1.5,
-            height: pieceSize * 1.5,
+            width: pieceSize * 1.5 * (1 + 0.2 * diceAnim/100),
+            height: pieceSize * 1.5 * (1 + 0.2 * diceAnim/100),
             decoration: BoxDecoration(
                 borderRadius: BorderRadius.all(Radius.circular(5)),
                 image: DecorationImage(
@@ -389,6 +394,21 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
       }
     });
 
+    diceController = AnimationController(
+        duration: Duration(milliseconds: 300), vsync: this)
+      ..addListener((){
+        setState((){
+          diceAnim = diceAnimation.value;
+        });
+      })
+      ..addStatusListener((status){
+        if(status == AnimationStatus.completed) {
+          diceController.reverse();
+        }else if (status == AnimationStatus.dismissed){
+          diceController.reset();
+        }
+      });
+
     slideAnimation = Tween<double>(
       begin: 0,
       end: 100,
@@ -398,6 +418,11 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
         curve: Curves.slowMiddle,
       ),
     );
+
+    diceAnimation = Tween<double>(
+      begin: 0,
+      end: 100,
+    ).animate(diceController);
 
   }
 
@@ -482,8 +507,8 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
 
     //dice
     boardStack.add(Positioned(
-      top: width / 2 - pieceSize / 4,
-      left: width / 2 - pieceSize / 4,
+      top: (width / 2 - pieceSize / 4 ) * (1 - 0.025 * diceAnim/100),
+      left: (width / 2 - pieceSize / 4 ) * (1 - 0.025 * diceAnim/100),
       child:_dice(),
     ));
 
