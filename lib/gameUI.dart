@@ -33,7 +33,7 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
 
   bool online;
   int gameID;
-  Color host;
+  bool host;
   //database subscription
   var turnSub;
   var drinkSub;
@@ -289,7 +289,7 @@ class _GameWindowState extends State<GameWindow> with SingleTickerProviderStateM
                     Row(
                       children:logic.getPlayerByColor(col).getPlayerInfo(pieceSize),
                     ),
-                    logic.turn.getCurrent() == host ? IconButton(
+                    host ? IconButton(
                       icon: Icon(Icons.plus_one,size: pieceSize),
                       onPressed: (){
                         setState((){

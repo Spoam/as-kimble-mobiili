@@ -64,6 +64,8 @@ class _HostGame extends State<HostGame>{
 
   void _startHosting(String name, int teamSize) async{
 
+    ready[0] = true;
+
     final snapshot = await Firestore.instance
         .collection(gameID.toString())
         .document('isActive')
@@ -72,7 +74,7 @@ class _HostGame extends State<HostGame>{
     //can't host game with same id unless the game is no longer active
     if (snapshot != null && snapshot.exists) {
       if(snapshot.data['isActive'] == 1){
-        _showDialog("A lobby with that ID already exists");
+        _showDialog(context ,"A lobby with that ID already exists");
         return;
       }
     }
@@ -117,7 +119,7 @@ class _HostGame extends State<HostGame>{
         break;
 
       case 4:
-        _showDialog("Lobby is full");
+        _showDialog(context, "Lobby is full");
         return;
 
       default:
@@ -152,7 +154,7 @@ class _HostGame extends State<HostGame>{
     //continue playing as the correct player
     if(cont) localPlayers.add(players.firstWhere((p) => p.name == oldName).color);
     
-    Navigator.of(context).pushNamed('/playerselect/game', arguments: GameArguments(args, true, localPlayers, args[0].color, gameID));
+    Navigator.of(context).pushNamed('/playerselect/game', arguments: GameArguments(args, true, localPlayers, localPlayers.contains(Colors.red), gameID));
   }
 
 
@@ -164,7 +166,14 @@ class _HostGame extends State<HostGame>{
 
         int index = querySnapshot.documents.length - 1;
 
-        if(index <= 4) ready.setRange(0, index, [true, true, true, true]);
+        reference.document("red").get()
+            .then((doc) {
+              if(!doc.exists){
+                _showDialog(context ,"host has left");
+              }
+        });
+
+        if(index <= 4 && index >= 0) ready.setRange(0, index, [true, true, true, true]);
 
         if(change.document.documentID == 'go'){
           _startGame(false);
@@ -178,7 +187,7 @@ class _HostGame extends State<HostGame>{
     Firestore.instance.collection(gameID.toString()).document('go').setData({'a':1});
   }
 
-  void _showDialog(String message) {
+  void _showDialog(BuildContext context, String message) {
     // flutter defined function
     showDialog(
       context: context,
@@ -192,7 +201,39 @@ class _HostGame extends State<HostGame>{
             new FlatButton(
               child: new Text("Back"),
               onPressed: () {
+                _leave();
                 Navigator.of(context).popUntil(ModalRoute.withName('/join'));
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  _showLeaveWarning(){
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return AlertDialog(
+          title: new Text("Warning"),
+          content: new Text("Are you sure you want to leave?"),
+          actions: <Widget>[
+            // usually buttons at the bottom of the dialog
+            new FlatButton(
+              child: new Text("Leave"),
+              onPressed: () {
+                _leave();
+                Navigator.of(context).popUntil(ModalRoute.withName('/join'));
+                return true;
+              },
+            ),
+            new FlatButton(
+              child: new Text("Cancel"),
+              onPressed: () {
+                Navigator.pop(context);
+                return false;
               },
             ),
           ],
@@ -288,8 +329,12 @@ class _HostGame extends State<HostGame>{
           child:
             MaterialButton(
               onPressed:(){
-                _joinLobby(localPlayerNameInput.text, int.parse(localPlayerCountInput.text));
-                localPlayerNameInput.clear();
+                if(ready.contains(false)){
+                  _joinLobby(localPlayerNameInput.text, int.parse(localPlayerCountInput.text));
+                }
+                setState(() {
+                  localPlayerNameInput.clear();
+                });
               },
               child:Text('+', textScaleFactor: 3,),
             ),
@@ -352,6 +397,11 @@ class _HostGame extends State<HostGame>{
     );
   }
 
+  void _leave(){
+    CollectionReference reference = Firestore.instance.collection(gameID.toString());
+    localPlayers.forEach((p) => reference.document(getStringFromColor(p)).delete());
+    if(host) reference.document("isActive").delete();
+  }
 
   StreamBuilder<QuerySnapshot> _playerStream(){
 
@@ -377,6 +427,7 @@ class _HostGame extends State<HostGame>{
   }
 
 
+
   @override
   void dispose(){
     sub.cancel();
@@ -394,7 +445,7 @@ class _HostGame extends State<HostGame>{
       int teamSize = args.teamSize;
       host = type == JoinType.HOST;
 
-      if(type == JoinType.HOST){
+      if(host){
         _startHosting(name, teamSize);
 
       }else if(type == JoinType.JOIN){
@@ -407,12 +458,13 @@ class _HostGame extends State<HostGame>{
       _waitForStart();
       first = false;
     }
+
     width = MediaQuery.of(context).size.width - 20;
 
     pieceSize = width / 13;
 
-
-    return Scaffold(
+    return WillPopScope(
+        child:Scaffold(
       backgroundColor: Colors.white30,
       appBar: AppBar(
         title:Text('Pelaajat'),
@@ -456,19 +508,55 @@ class _HostGame extends State<HostGame>{
                     _triggerStart();
                   });
                 },
-                child: Text('Aloita'),
+                child: Text('Start'),
               )
           ): Container(),
 
           ready.contains(false) ? _buildPlayerInput(width / 2, Colors.black54, 0, "add local player"): Container(),
 
-          FloatingActionButton(//back button
-            onPressed:(){
-              Navigator.pop(context);
-            },
-            child:Text('back'),
-          )
+          Container( //start button
+              margin: const EdgeInsets.fromLTRB(10,10,10,10),
+              width: width / 3 - 20,
+              decoration: BoxDecoration(
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                  boxShadow:[
+                    BoxShadow(
+                        color: Colors.black54,
+                        offset: Offset(1,1),
+                        blurRadius: 0.5,
+                        spreadRadius: 0.5
+                    ),]
+              ),
+              child: MaterialButton(
+                onPressed: () {
+                  _showLeaveWarning();
+                },
+                child: Text('Leave'),
+              )
+          ),
         ],
+      ),
+    ),
+      onWillPop: () => showDialog<bool>(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: Text('Warning'),
+          content: Text('Are you sure you want to leave?'),
+          actions: [
+            FlatButton(
+              child: Text('Leave'),
+              onPressed: () {
+                _leave();
+                Navigator.of(context).popUntil(ModalRoute.withName('/join'));
+              },
+            ),
+            FlatButton(
+              child: Text('Cancel'),
+              onPressed: () => Navigator.pop(c, false),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -683,7 +771,7 @@ class GameArguments{
   final bool online;
   final List<Color> localPlayers;
   final int gameID;
-  final Color host;
+  final bool host;
   GameArguments(this.players, this.online, this.localPlayers, this.host, this.gameID);
 }
 

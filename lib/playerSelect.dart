@@ -53,7 +53,7 @@ class _PlayerSelectScreenState extends State<PlayerSelectScreen>{
       Player green = Player(controllers['green'][0].text, Colors.green, int.parse(controllers['green'][1].text));
       Player yellow = Player(controllers['yellow'][0].text, Colors.yellow, int.parse(controllers['yellow'][1].text));
 
-      Navigator.of(context).pushNamed('/playerselect/game', arguments: GameArguments([red, blue, green, yellow], false, [Colors.red, Colors.indigo, Colors.green, Colors.yellow], Colors.red, 0));
+      Navigator.of(context).pushNamed('/playerselect/game', arguments: GameArguments([red, blue, green, yellow], false, [Colors.red, Colors.indigo, Colors.green, Colors.yellow], true, 0));
 
     }on FormatException catch(e){
       _showDialog(e.message);
