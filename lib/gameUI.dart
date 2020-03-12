@@ -655,7 +655,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
                         child: Text('Liiku'),
                       ),
                     ) : Container(),
-                    logic.canRaise || true ? Container(
+                    logic.canRaise ? Container(
                       margin: const EdgeInsets.fromLTRB(2.5,5,10,5),
                       width: width / 2 - 20,
                       decoration: BoxDecoration(
