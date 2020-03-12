@@ -34,10 +34,27 @@ class GameLogic{
   bool canRaise = false;
 
   Turn turn;
+  
+  int randomNaks(){
 
+    List<int> possibleVals = [1, 2, 3, 4, 5, 6];
+    
+    int roll = rand.nextInt(1000);
+
+    //probability of  rolling opposite side.
+    //20,7% according to tactic
+    if(roll < 207){
+      return  7 - diceVal;
+    }
+    possibleVals.removeWhere((a) => a  == (7 - diceVal));
+
+    return possibleVals[rand.nextInt(5)];
+    
+  }
+  
   void rollDice(){
     if (!_diceRolled) {
-      diceVal = rand.nextInt(6) + 1;
+      diceVal = randomNaks();
       attempts++;
 
       _diceRolled = false;
@@ -250,6 +267,24 @@ class GameLogic{
 
   void raise(){
 
+    players.forEach((player){
+      List<List<int>> pieces = findPiece(player.color);
+
+      for(int i = 0; i < 4; i++){
+        int index = pieces[i][1];
+        if(pieceData[index].pos > 27){
+          //eating piece with zero multiplayer just sends it home
+          _eatPiece(index, 0);
+          if(player.color == turn.getCurrent()){
+            _movePiece(index, 6);
+          }
+          break;
+        }
+      }
+
+    });
+
+    /*
     int i = 0;
     while(i < 16){
       if(pieceData[i].pos > 27){
@@ -264,7 +299,7 @@ class GameLogic{
       }else{
         i++;
       }
-    }
+    }*/
     getPlayerByColor(turn.getCurrent()).raises++;
     canRaise = false;
   }
@@ -343,8 +378,7 @@ class GameLogic{
     return order;
   }
 
-  bool checkWin(Color color){
-
+  int piecesInGoal(Color color){
     List<int> piecesInGoal = [];
 
     bool onlyPiece = false;
@@ -367,8 +401,13 @@ class GameLogic{
         }
       }
     }
+    return piecesInGoal.length;
+  }
+
+  bool checkWin(Color color){
+
     Player player = getPlayerByColor(color);
-    if(player.drunk >= player.drinks && piecesInGoal.length == 4){
+    if(player.drunk >= player.drinks && piecesInGoal(color) == 4){
       player.winner = true;
       return true;
     }

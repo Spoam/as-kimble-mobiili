@@ -249,6 +249,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
       if(turnBuffer[0].pieceId == -2){
         logic.raise();
       }
+      logic.diceVal = turnBuffer[0].diceVal;
       _handleTurn(turnBuffer[0].pieceId, turnBuffer[0].diceVal);
     });
 
@@ -482,9 +483,14 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
         first = false;
       }
 
+    if(logic.piecesInGoal(logic.turn.getCurrent()) == 4){
+      _handleTurn(null, logic.diceVal);
+    }
+
     if(online && !localPlayers.contains(logic.turn.getCurrent())){
       _turnFromDatabase();
     }
+
 
     //add all board widgets to a single list
     List<Widget> boardStack = [];
@@ -539,6 +545,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
 
     );
     boardStack.add(turnText);
+
 
     return WillPopScope(
         child: Scaffold(
@@ -648,7 +655,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
                         child: Text('Liiku'),
                       ),
                     ) : Container(),
-                    logic.canRaise ? Container(
+                    logic.canRaise || true ? Container(
                       margin: const EdgeInsets.fromLTRB(2.5,5,10,5),
                       width: width / 2 - 20,
                       decoration: BoxDecoration(
