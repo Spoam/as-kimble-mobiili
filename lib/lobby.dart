@@ -144,6 +144,8 @@ class _HostGame extends State<HostGame>{
       }
     });
 
+    if(cont && (players.length != 4)) _showDialog(context, "can't continue game not in progress");
+
     //makes sure that player indexes are same for all users
     List<Player> args = List(4);
     args[0] = players.firstWhere((test) => test.color == Colors.red);
@@ -739,8 +741,7 @@ class _JoinGame extends State<JoinGame> {
               child: MaterialButton(
                 onPressed: () {
                   setState(() {
-                    //TODO fix this shit
-                    //_join(JoinType.CONTINUE);
+                    _join(JoinType.CONTINUE);
                   });
                 },
                 child: Text('Continue'),

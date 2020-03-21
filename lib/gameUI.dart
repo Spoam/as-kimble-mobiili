@@ -237,7 +237,6 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
       _handleRadioValueChange(-1);
       if(logic.diceVal != 6) controller.forward();
     });
-    turnsHandled++;
   }
 
   void _turnFromDatabase(){
@@ -245,6 +244,15 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
     if(turnBuffer.isEmpty) return;
 
     turnBuffer.sort((a, b) => a.turn.compareTo(b.turn));
+
+    //if this is true we are out of sync and must wait for more turns to be loaded into
+    //the buffer
+    print(turnsHandled);
+    print(turnBuffer[0].turn);
+    if(turnBuffer[0].turn != turnsHandled) return;
+
+    turnsHandled++;
+
     setState(() {
       if(turnBuffer[0].pieceId == -2){
         logic.raise();
@@ -462,6 +470,8 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
 
       players = args.players;
 
+      players.forEach((player) => player.drinks = 0);
+
       localPlayers = args.localPlayers;
 
       online = args.online;
@@ -487,7 +497,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
       _handleTurn(null, logic.diceVal);
     }
 
-    if(online && !localPlayers.contains(logic.turn.getCurrent())){
+    if(turnBuffer.isNotEmpty){
       _turnFromDatabase();
     }
 

@@ -42,13 +42,18 @@ class GameLogic{
     int roll = rand.nextInt(1000);
 
     //probability of  rolling opposite side.
-    //20,7% according to tactic
-    if(roll < 207){
+    //20,7% according to tactic. nearly 30% according to another study. set to 22% for now
+    if(roll < 220){
       return  7 - diceVal;
     }
+    //probability for rolling same number is around 10%
+    if(roll > 900){
+      return diceVal;
+    }
     possibleVals.removeWhere((a) => a  == (7 - diceVal));
+    possibleVals.removeWhere((a) => a  == diceVal);
 
-    return possibleVals[rand.nextInt(5)];
+    return possibleVals[rand.nextInt(4)];
     
   }
   
@@ -348,7 +353,10 @@ class GameLogic{
 
   void handleTurn(int idx, diceRoll){
 
+
+
     if(diceRoll == -1) diceRoll = diceVal;
+    //move piece null == skip turn
     if(idx != null) _movePiece(idx, diceRoll);
     //6 = new turn
     if(diceRoll != 6){
