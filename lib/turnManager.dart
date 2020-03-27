@@ -33,6 +33,7 @@ class Turn{
     for(int i = 0; i < _playerCount; i++){
       if(playerColors[i] == color) return i;
     }
+    return -1;
   }
 }
 

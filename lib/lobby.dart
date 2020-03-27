@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:kimble/player.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -36,6 +35,8 @@ class _HostGame extends State<HostGame>{
 
   double width = 1;
   double pieceSize = 1;
+
+  bool initReady;
 
   var sub;
 
@@ -85,6 +86,7 @@ class _HostGame extends State<HostGame>{
     //players.add(Player(name, Colors.red, teamSize));
     localPlayers.add(Colors.red);
     ready[0] = true;
+    initReady = true;
 
   }
 
@@ -132,6 +134,7 @@ class _HostGame extends State<HostGame>{
     //players.add(Player(name, getColorFromString(color), teamSize));
     localPlayers.add(getColorFromString(color));
     ready[index] = true;
+    initReady = true;
   }
 
   void _startGame(bool cont) async{
@@ -155,13 +158,16 @@ class _HostGame extends State<HostGame>{
 
     //continue playing as the correct player
     if(cont) localPlayers.add(players.firstWhere((p) => p.name == oldName).color);
-    
+
+    //stop listening
+    sub.cancel();
+
     Navigator.of(context).pushNamed('/playerselect/game', arguments: GameArguments(args, true, localPlayers, localPlayers.contains(Colors.red), gameID));
   }
 
 
   void _waitForStart(){
-    int timesTriggered = 0;
+
     CollectionReference reference = Firestore.instance.collection(gameID.toString());
     sub = reference.snapshots().listen((querySnapshot) {
       querySnapshot.documentChanges.forEach((change){
@@ -178,7 +184,7 @@ class _HostGame extends State<HostGame>{
         if(index <= 4 && index >= 0) ready.setRange(0, index, [true, true, true, true]);
 
         if(change.document.documentID == 'go'){
-          _startGame(false);
+          if(initReady) _startGame(false);
         }
 
       });
@@ -278,7 +284,7 @@ class _HostGame extends State<HostGame>{
             _nextFocus(context, nodeID);
           },
           style: TextStyle(
-            fontSize: pieceSize * 1.5,
+            fontSize: pieceSize,
           ),
           decoration: InputDecoration.collapsed(
             hintText: colorName,

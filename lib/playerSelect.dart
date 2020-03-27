@@ -259,7 +259,6 @@ class _LobbyState extends _PlayerSelectScreenState{
       Player green = Player(controllers['green'][0].text, Colors.green, int.parse(controllers['green'][1].text));
       Player yellow = Player(controllers['yellow'][0].text, Colors.yellow, int.parse(controllers['yellow'][1].text));
 
-      var db = Firestore.instance.collection('game');
       Firestore.instance.collection('game').document('Red')
           .setData({'name' : red.name, 'drinks' : 0, 'drunk' : 0, 'raises' : 0});
 

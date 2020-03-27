@@ -245,16 +245,23 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
 
     turnBuffer.sort((a, b) => a.turn.compareTo(b.turn));
 
-    //if this is true we are out of sync and must wait for more turns to be loaded into
-    //the buffer
     print(turnsHandled);
     print(turnBuffer[0].turn);
-    if(turnBuffer[0].turn != turnsHandled) return;
+
+    //in this case there is a missing turn and we must wait for more turns to be loaded
+    if(turnBuffer[0].turn > turnsHandled) return;
+    //int this case the turn has already been handled
+    if(turnBuffer[0].turn < turnsHandled){
+      print("removing old turn");
+      turnBuffer.removeAt(0);
+      return;
+    }
 
     turnsHandled++;
 
     setState(() {
       if(turnBuffer[0].pieceId == -2){
+        sound.play('korotus_cheer.mp3');
         logic.raise();
       }
       logic.diceVal = turnBuffer[0].diceVal;
@@ -368,7 +375,6 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
       querySnapshot.documentChanges.forEach((change){
         var data = change.document.data;
         turnBuffer.add(TurnData(data['turnCount'], data['color'], data['diceVal'], data['pieceId']));
-        print(change.document.documentID);
         _turnFromDatabase();
 
       });
@@ -376,8 +382,8 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
   }
 
   void _writeToDatabase(int pieceId){
-    DocumentReference doc = Firestore.instance.collection(gameID.toString()).document("turns").collection("turn").document();
-    doc.setData({'turnCount' : turnsHandled, 'color' : "INSERT COLOR HERE", 'pieceId': pieceId, 'diceVal' : logic.diceVal});
+    DocumentReference doc = Firestore.instance.collection(gameID.toString()).document("turns").collection("turn").document('$turnsHandled');
+    doc.setData({'turnCount' : turnsHandled, 'color' : getStringFromColor(logic.turn.getCurrent()), 'pieceId': pieceId, 'diceVal' : logic.diceVal});
   }
 
   @override
@@ -494,7 +500,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
       }
 
     if(logic.piecesInGoal(logic.turn.getCurrent()) == 4){
-      _handleTurn(null, logic.diceVal);
+      _writeToDatabase(-2);
     }
 
     if(turnBuffer.isNotEmpty){
@@ -682,7 +688,6 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
                       child: MaterialButton(
                         onPressed: (){
                           setState(() {
-                            sound.play('korotus_cheer.mp3');
                             if(online){
                               _writeToDatabase(-2);
                             }else{
