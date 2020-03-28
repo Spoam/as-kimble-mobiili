@@ -22,6 +22,7 @@ class GameWindow extends StatefulWidget {
 
 class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
 
+
   List<AnimatedPositioned> pieceIcons = new List(16);
   List<List<double>> board = new List(28 + 16);
   List<Positioned> boardIcons = new List(44);
@@ -107,13 +108,13 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
 
     //set selected piece to first movable
     int idx = logic.getLegalMoves().reversed.toList().indexOf(true);
-    if(idx != -1){
+    if(idx != skipTurn){
       _handleRadioValueChange(3 - idx);
     }else if(logic.getDiceStatus()){
       if(online){
-        _writeToDatabase(-1);
+        _writeToDatabase(skipTurn);
       }else{
-        _handleTurn(null, -1);
+        _handleTurn(null, skipTurn);
       }
     }
   }
@@ -260,7 +261,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
     turnsHandled++;
 
     setState(() {
-      if(turnBuffer[0].pieceId == -2){
+      if(turnBuffer[0].pieceId == raise){
         sound.play('korotus_cheer.mp3');
         logic.raise();
       }
@@ -500,7 +501,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
       }
 
     if(logic.piecesInGoal(logic.turn.getCurrent()) == 4){
-      _writeToDatabase(-1);
+      _writeToDatabase(skipTurn);
     }
 
     if(turnBuffer.isNotEmpty){
@@ -659,9 +660,9 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
                             }else{
 
                               if(logic.getLegalMoves().contains(true)) {
-                                _handleTurn(selectedPiece, -1);
+                                _handleTurn(selectedPiece, skipTurn);
                               }else{
-                                _handleTurn(null, -1);
+                                _handleTurn(null, skipTurn);
                               }
                             }
 
@@ -689,11 +690,11 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
                         onPressed: (){
                           setState(() {
                             if(online){
-                              _writeToDatabase(-2);
+                              _writeToDatabase(raise);
                             }else{
                               logic.raise();
                             }
-                            _handleTurn(null, -1);
+                            _handleTurn(null, skipTurn);
                           });
                         },
                         child: Text('Korota'),

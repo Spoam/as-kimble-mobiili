@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:kimble/turnManager.dart';
 import 'package:audioplayers/audio_cache.dart';
 
+const int skipTurn = -1;
+const int raise = -2;
+
 class GameLogic{
   GameLogic(this.players, this.placePiece, this.cache){
     turn = Turn(players);
