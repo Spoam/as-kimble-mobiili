@@ -500,7 +500,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
       }
 
     if(logic.piecesInGoal(logic.turn.getCurrent()) == 4){
-      _writeToDatabase(-2);
+      _writeToDatabase(-1);
     }
 
     if(turnBuffer.isNotEmpty){
