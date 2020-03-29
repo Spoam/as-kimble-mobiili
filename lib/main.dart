@@ -3,6 +3,8 @@ import 'package:kimble/gameUI.dart';
 import 'package:kimble/winScreen.dart';
 import 'package:kimble/playerSelect.dart';
 import 'package:kimble/lobby.dart';
+import 'package:package_info/package_info.dart';
+import 'globals.dart' as G;
 
 void main() => runApp(MyApp());
 
@@ -44,11 +46,24 @@ class MainMenu extends StatefulWidget {
 
 class _MainMenuState extends State<MainMenu> {
 
+  Future<String> getVersionNumber() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    G.version = packageInfo.version;
+    return packageInfo.version;
+
+    // Other data you can get:
+    //
+    // 	String appName = packageInfo.appName;
+    // 	String packageName = packageInfo.packageName;
+    //	String buildNumber = packageInfo.buildNumber;
+  }
+
   @override
   Widget build(BuildContext context){
 
     double width = MediaQuery.of(context).size.width - 20;
 
+    getVersionNumber();
 
     return Scaffold(
       appBar: AppBar(
@@ -56,6 +71,10 @@ class _MainMenuState extends State<MainMenu> {
       ),
       body:ListView(
         children: [
+          FutureBuilder(
+            future: getVersionNumber(),
+            builder: (BuildContext context, AsyncSnapshot snapshot) =>
+              Text("version " + (snapshot.hasData ? "${snapshot.data}" : "?.?.?")),),
           Container(
             width: width / 3,
             margin: const EdgeInsets.fromLTRB(10,10,10,10),

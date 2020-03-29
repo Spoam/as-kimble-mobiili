@@ -253,7 +253,8 @@ class GameLogic{
     var otherRaises = players.where((player) => player.raises < getPlayerByColor(turn.getCurrent()).raises);
     if(otherRaises.isNotEmpty) canRaise = false;
 
-    bool redGoal = false;
+
+    /*bool redGoal = false;
     bool blueGoal = false;
     bool greenGoal = false;
     bool yellowGoal = false;
@@ -266,11 +267,16 @@ class GameLogic{
       if(p.color == Colors.green && p.steps > 28) greenGoal = true;
       if(p.color == Colors.yellow && p.steps > 28) yellowGoal = true;
     }
+    */
 
-    if(!redGoal || !blueGoal || !yellowGoal || !greenGoal){
+    players.forEach((player) => {
+      if(piecesInGoal(player.color) < 1) canRaise = false
+    });
+
+    /*if(!redGoal || !blueGoal || !yellowGoal || !greenGoal){
       canRaise = false;
       //print('cant raise because some players havent reached goal yet');
-    }
+    }*/
   }
 
   void raise(){
@@ -309,7 +315,12 @@ class GameLogic{
       }
     }*/
     getPlayerByColor(turn.getCurrent()).raises++;
+    //when raise round is over set accept raise to false for every one
+    if(players.every((p) => p.raises == players[0].raises) && players[0].raises > 1){
+      players.forEach((p) =>  p.acceptRaise = false);
+    }
     canRaise = false;
+    handleTurn(null, -1);
   }
 
   int _getPieceAt(int pos){

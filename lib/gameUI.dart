@@ -9,6 +9,7 @@ import 'package:audioplayers/audio_cache.dart';
 import 'package:kimble/gameLogic.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:kimble/turnManager.dart';
+import 'globals.dart' as G;
 
 
 class GameWindow extends StatefulWidget {
@@ -31,6 +32,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
 
   List<Player> players;
   List<Color> localPlayers;
+  bool gameOver = false;
 
   bool online;
   int gameID;
@@ -38,6 +40,8 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
   //database subscription
   var turnSub;
   var drinkSub;
+  var answerSub;
+  int answerCount = 0;
   List<TurnData> turnBuffer = [];
   int turnsHandled = 0;
 
@@ -103,7 +107,8 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
 
   void _rollDice(){
 
-    if(!localPlayers.contains(logic.turn.getCurrent())) return;
+    //if it's not your turn or everyone is in goal
+    if(!localPlayers.contains(logic.turn.getCurrent()) || gameOver) return;
     logic.rollDice();
 
     //set selected piece to first movable
@@ -240,6 +245,97 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
     });
   }
 
+  void _raise(){
+    if(logic.getPlayerByColor(logic.turn.getCurrent()).raises > 0){
+      if(!players.every((p) => p.acceptRaise)){
+        logic.getPlayerByColor(logic.turn.getCurrent()).acceptRaise = true;
+        print("raising");
+        _listenForAnswer();
+        _pollRaise();
+      }else{
+        _writeToDatabase(raise);
+      }
+
+    }else{
+      _writeToDatabase(raise);
+    }
+  }
+
+  void _pollRaise(){
+    DocumentReference doc = Firestore.instance.collection(gameID.toString()).document("accept");
+    doc.setData({'version' : G.version});
+    localPlayers.forEach((color) => doc.collection("players").document("${getStringFromColor(color)}").setData({"answer" : true}));
+    answerCount++;
+  }
+
+  void _raiseAnswer(Map<String, bool> data){
+
+    if(!localPlayers.contains(logic.turn.getCurrent())) return;
+
+    print("answer received");
+    answerCount++;
+    if(answerCount == 4) {
+      answerSub.cancel();
+      Firestore.instance.collection(gameID.toString())
+          .document("accept")
+          .delete();
+      answerCount = 0;
+    }
+
+      data.forEach((color, answer) => logic.getPlayerByColor(getColorFromString(color)).acceptRaise = answer);
+
+      print("hei");
+      print(answerCount);
+      if(!players.contains((player) => player.acceptedRaise == false)){
+        _writeToDatabase(raise);
+      }else if (answerCount == 4){
+        setState(() {
+          logic.canRaise = false;
+        });
+      }
+
+  }
+
+  void _pollRaiseMessage(){
+
+    CollectionReference doc = Firestore.instance.collection(gameID.toString()).document("accept").collection("players");
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return AlertDialog(
+          title: new Text("Do you accept another round of raises"),
+          content: new Text("All players must accept or it will not happen"),
+          actions: <Widget>[
+            // usually buttons at the bottom of the dialog
+            new FlatButton(
+              child: new Text("YES!"),
+              onPressed: () {
+                localPlayers.forEach((color) => {
+                  logic.getPlayerByColor(color).acceptRaise = true,
+                  doc.document("${getStringFromColor(color)}").setData({"answer" : true}),
+                  Navigator.pop(context)
+                });
+
+              },
+            ),
+            new FlatButton(
+              child: new Text("NO :("),
+              onPressed: () {
+                localPlayers.forEach((color) => {
+                  logic.getPlayerByColor(color).acceptRaise = false,
+                  doc.document("${getStringFromColor(color)}").setData({"answer" : false}),
+                  Navigator.pop(context)
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _turnFromDatabase(){
 
     if(turnBuffer.isEmpty) return;
@@ -344,18 +440,35 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
     );
   }
 
-  void _listenForDrinks(){
+  void _listenForChanges(){
     CollectionReference reference = Firestore.instance.collection(gameID.toString());
     drinkSub = reference.snapshots().listen((querySnapshot) {
       querySnapshot.documentChanges.forEach((change){
         var doc = change.document;
+        //brown means not a color
         if(getColorFromString(doc.documentID) != Colors.brown){
-          print(change.document.documentID);
           Player p = logic.getPlayerByColor(getColorFromString(doc.documentID));
           p.drunk = doc.data['drunk'];
+          if(logic.isWinner()) Navigator.of(context).pushNamed('/playerselect/game/end', arguments: players);
+        }else if(doc.documentID == "accept"){
+          if(!localPlayers.contains(logic.turn.getCurrent())){
+            _pollRaiseMessage();
+          }
         }
 
       });
+    });
+  }
+
+  void _listenForAnswer(){
+    CollectionReference reference = Firestore.instance.collection(gameID.toString()).document("accept").collection("players");
+    answerSub = reference.snapshots().listen((querySnapshot) {
+      querySnapshot.documentChanges.forEach((change){
+        var doc = change.document;
+        print(doc.documentID);
+        _raiseAnswer({doc.documentID : doc.data["answer"]});
+      });
+
     });
   }
 
@@ -452,6 +565,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
 
     turnSub.cancel();
     drinkSub.cancel();
+    answerSub.cancel();
     controller.dispose();
     super.dispose();
   }
@@ -494,15 +608,22 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
 
       if(online) {
         _readFromDatabase();
-        _listenForDrinks();
+        _listenForChanges();
       }
 
         first = false;
       }
-
-    if(logic.piecesInGoal(logic.turn.getCurrent()) == 4){
-      _writeToDatabase(skipTurn);
+    
+    if(localPlayers.contains(logic.turn.getCurrent())){
+      if(logic.piecesInGoal(logic.turn.getCurrent()) == 4){
+        gameOver = true;
+        //check if all players have all pieces in goal
+        //gameOver is set to false if even one player doesn't have all pieces in goal
+        players.forEach((player) => gameOver = (logic.piecesInGoal(player.color) == 4 ? gameOver : false));
+        if(!gameOver) _writeToDatabase(skipTurn);
+      }
     }
+
 
     if(turnBuffer.isNotEmpty){
       _turnFromDatabase();
@@ -672,7 +793,8 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
                         child: Text('Liiku'),
                       ),
                     ) : Container(),
-                    logic.canRaise ? Container(
+                    Text(logic.canRaise ? "raise" : "no raise"),
+                    logic.canRaise || true ? Container(
                       margin: const EdgeInsets.fromLTRB(2.5,5,10,5),
                       width: width / 2 - 20,
                       decoration: BoxDecoration(
@@ -690,11 +812,11 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
                         onPressed: (){
                           setState(() {
                             if(online){
-                              _writeToDatabase(raise);
+                              _raise();
                             }else{
                               logic.raise();
                             }
-                            _handleTurn(null, skipTurn);
+
                           });
                         },
                         child: Text('Korota'),

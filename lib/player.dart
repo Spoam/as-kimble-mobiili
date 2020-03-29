@@ -15,6 +15,7 @@ class Player{
   int drinks = 0;
   int drunk = 0;
   int raises = 0;
+  bool acceptRaise = false;
 
   bool winner = false;
   bool moralWinner = false;

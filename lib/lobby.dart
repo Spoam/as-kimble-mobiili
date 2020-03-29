@@ -5,6 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:math';
 import 'dart:core';
 import 'package:kimble/colors.dart';
+import 'globals.dart' as G;
+
 
 class HostGame extends StatefulWidget{
 
@@ -18,7 +20,6 @@ class JoinGame extends StatefulWidget{
 }
 
 class _HostGame extends State<HostGame>{
-
 
   List<FocusNode> focusNodes = List.generate(8, (node) => FocusNode());
 
@@ -81,8 +82,8 @@ class _HostGame extends State<HostGame>{
     }
 
     var db = Firestore.instance.collection(gameID.toString());
-    db.document('isActive').setData({'isActive' : 1});
-    db.document('red').setData({'color' : 'red', 'name' : name, 'team' : teamSize, 'drinks' : 0, 'drunk' : 0, 'raises' : 0});
+    db.document('isActive').setData({'version' : G.version});
+    db.document('red').setData({'color' : 'red', 'name' : name, 'team' : teamSize, 'drinks' : 0, 'drunk' : 0, 'raises' : 0, 'version' : G.version});
     //players.add(Player(name, Colors.red, teamSize));
     localPlayers.add(Colors.red);
     ready[0] = true;
@@ -130,7 +131,7 @@ class _HostGame extends State<HostGame>{
     }
 
     var db = Firestore.instance.collection(gameID.toString());
-    db.document(color).setData({'color' : color, 'name' : name, 'team' : teamSize,'drinks' : 0, 'drunk' : 0, 'raises' : 0});
+    db.document(color).setData({'color' : color, 'name' : name, 'team' : teamSize,'drinks' : 0, 'drunk' : 0, 'raises' : 0, 'version' : G.version});
     //players.add(Player(name, getColorFromString(color), teamSize));
     localPlayers.add(getColorFromString(color));
     ready[index] = true;
@@ -181,7 +182,9 @@ class _HostGame extends State<HostGame>{
               }
         });
 
-        if(index <= 4 && index >= 0) ready.setRange(0, index, [true, true, true, true]);
+        if(index <= 4 && index >= 0) setState(() {
+          ready.setRange(0, index, [true, true, true, true]);
+        });
 
         if(change.document.documentID == 'go'){
           if(initReady) _startGame(false);
@@ -192,7 +195,7 @@ class _HostGame extends State<HostGame>{
   }
 
   void _triggerStart(){
-    Firestore.instance.collection(gameID.toString()).document('go').setData({'a':1});
+    Firestore.instance.collection(gameID.toString()).document('go').setData({'version':G.version});
   }
 
   void _showDialog(BuildContext context, String message) {
@@ -473,25 +476,25 @@ class _HostGame extends State<HostGame>{
 
     return WillPopScope(
         child:Scaffold(
-      backgroundColor: Colors.white30,
-      appBar: AppBar(
-        title:Text('Pelaajat'),
-      ),
-      body:ListView(
+          backgroundColor: Colors.white30,
+          appBar: AppBar(
+            title:Text('Pelaajat'),
+          ),
+        body:ListView(
 
         children:[
           Container(
             width: width / 2,
-            height: pieceSize * 2,
-            margin: EdgeInsets.fromLTRB(40, 10, 40, 10),
+            height: pieceSize * 1.5,
+            margin: EdgeInsets.fromLTRB(20, 10, 20, 10),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.all(Radius.circular(5)),
               ),
-            child: Text('gameID: ' + gameID.toString(),
+            child: Text('ID: ' + gameID.toString(),
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: pieceSize*1.5,
+                fontSize: pieceSize*1.2,
               ),
             ),
           ),
@@ -522,7 +525,7 @@ class _HostGame extends State<HostGame>{
 
           ready.contains(false) ? _buildPlayerInput(width / 2, Colors.black54, 0, "add local player"): Container(),
 
-          Container( //start button
+          Container( //leave button
               margin: const EdgeInsets.fromLTRB(10,10,10,10),
               width: width / 3 - 20,
               decoration: BoxDecoration(
