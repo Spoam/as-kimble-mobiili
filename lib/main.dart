@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kimble/gameUI.dart';
 import 'package:kimble/winScreen.dart';
@@ -75,6 +76,11 @@ class _MainMenuState extends State<MainMenu> {
             future: getVersionNumber(),
             builder: (BuildContext context, AsyncSnapshot snapshot) =>
               Text("version " + (snapshot.hasData ? "${snapshot.data}" : "?.?.?")),),
+          FutureBuilder(
+            future: Firestore.instance.collection("info").document("version").get(),
+            builder: (BuildContext context, AsyncSnapshot snapshot) =>
+              Text("newest " + (snapshot.hasData ? "${snapshot.data["newest"]}" : "?.?.?")),
+          ),
           Container(
             width: width / 3,
             margin: const EdgeInsets.fromLTRB(10,10,10,10),
