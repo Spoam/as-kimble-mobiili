@@ -107,6 +107,10 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
 
   void _rollDice(){
 
+
+    //raising is being discussed
+    if(answerCount != 0) return;
+
     //if it's not your turn or everyone is in goal
     if(!localPlayers.contains(logic.turn.getCurrent()) || gameOver) return;
     logic.rollDice();
@@ -264,8 +268,13 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
   void _pollRaise(){
     DocumentReference doc = Firestore.instance.collection(gameID.toString()).document("accept");
     doc.setData({'version' : G.version});
-    localPlayers.forEach((color) => doc.collection("players").document("${getStringFromColor(color)}").setData({"answer" : true}));
-    answerCount++;
+    localPlayers.forEach((color) =>
+    {
+      doc.collection("players")
+          .document("${getStringFromColor(color)}")
+          .setData({"answer": true}),
+      answerCount++
+    });
   }
 
   void _raiseAnswer(Map<String, bool> data){
@@ -274,7 +283,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
 
     print("answer received");
     answerCount++;
-    if(answerCount == 4) {
+    if(answerCount >= 4) {
       answerSub.cancel();
       Firestore.instance.collection(gameID.toString())
           .document("accept")
@@ -288,7 +297,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
       print(answerCount);
       if(!players.contains((player) => player.acceptedRaise == false)){
         _writeToDatabase(raise);
-      }else if (answerCount == 4){
+      }else if (answerCount == 0){
         setState(() {
           logic.canRaise = false;
         });
