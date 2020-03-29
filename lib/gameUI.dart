@@ -820,8 +820,8 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
                         onPressed: (){
                           setState(() {
                             if(online){
-                              //_raise();
-                              _writeToDatabase(-2);
+                              _raise();
+                              //_writeToDatabase(-2);
                             }else{
                               logic.raise();
                             }
