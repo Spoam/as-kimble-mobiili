@@ -802,8 +802,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
                         child: Text('Liiku'),
                       ),
                     ) : Container(),
-                    Text(logic.canRaise ? "raise" : "no raise"),
-                    logic.canRaise || true ? Container(
+                    logic.canRaise ? Container(
                       margin: const EdgeInsets.fromLTRB(2.5,5,10,5),
                       width: width / 2 - 20,
                       decoration: BoxDecoration(
@@ -821,7 +820,8 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
                         onPressed: (){
                           setState(() {
                             if(online){
-                              _raise();
+                              //_raise();
+                              _writeToDatabase(-2);
                             }else{
                               logic.raise();
                             }
