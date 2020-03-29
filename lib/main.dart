@@ -47,6 +47,8 @@ class MainMenu extends StatefulWidget {
 
 class _MainMenuState extends State<MainMenu> {
 
+  String newest = "version not found";
+
   Future<String> getVersionNumber() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     G.version = packageInfo.version;
@@ -57,6 +59,11 @@ class _MainMenuState extends State<MainMenu> {
     // 	String appName = packageInfo.appName;
     // 	String packageName = packageInfo.packageName;
     //	String buildNumber = packageInfo.buildNumber;
+  }
+
+  String _saveNewest(DocumentSnapshot data){
+    newest = data["newest"];
+    return newest;
   }
 
   @override
@@ -79,8 +86,18 @@ class _MainMenuState extends State<MainMenu> {
           FutureBuilder(
             future: Firestore.instance.collection("info").document("version").get(),
             builder: (BuildContext context, AsyncSnapshot snapshot) =>
-              Text("newest " + (snapshot.hasData ? "${snapshot.data["newest"]}" : "?.?.?")),
+              Text("newest " + (snapshot.hasData ? "${_saveNewest(snapshot.data)}" : "?.?.?")),
           ),
+          G.version.substring(0,3) != newest.substring(0,3) ? Container(
+            width: width,
+            color: Colors.lightBlue,
+            child: Text("ERROR. APP VERSION TOO OLD FOR ONLINE PLAY",
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 20,
+              ),
+            ),
+          ) : Container(),
           Container(
             width: width / 3,
             margin: const EdgeInsets.fromLTRB(10,10,10,10),
@@ -120,7 +137,13 @@ class _MainMenuState extends State<MainMenu> {
             ),
             child:MaterialButton(
               onPressed:(){
-                Navigator.of(context).pushNamed('/join');
+                setState(() {
+
+                });
+                if(G.version.substring(0,3) == newest.substring(0,3)){
+                  Navigator.of(context).pushNamed('/join');
+                }
+
               },
               child:Text('Online'),
             ),

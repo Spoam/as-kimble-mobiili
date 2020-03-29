@@ -82,8 +82,9 @@ class _HostGame extends State<HostGame>{
     }
 
     var db = Firestore.instance.collection(gameID.toString());
-    db.document('isActive').setData({'version' : G.version});
-    db.document('red').setData({'color' : 'red', 'name' : name, 'team' : teamSize, 'drinks' : 0, 'drunk' : 0, 'raises' : 0, 'version' : G.version});
+    print(G.version.substring(0,3));
+    db.document('isActive').setData({'version' : G.version.substring(0,3)});
+    db.document('red').setData({'color' : 'red', 'name' : name, 'team' : teamSize, 'drinks' : 0, 'drunk' : 0, 'raises' : 0, 'version' : G.version.substring(0,3)});
     //players.add(Player(name, Colors.red, teamSize));
     localPlayers.add(Colors.red);
     ready[0] = true;
@@ -131,7 +132,7 @@ class _HostGame extends State<HostGame>{
     }
 
     var db = Firestore.instance.collection(gameID.toString());
-    db.document(color).setData({'color' : color, 'name' : name, 'team' : teamSize,'drinks' : 0, 'drunk' : 0, 'raises' : 0, 'version' : G.version});
+    db.document(color).setData({'color' : color, 'name' : name, 'team' : teamSize,'drinks' : 0, 'drunk' : 0, 'raises' : 0, 'version' : G.version.substring(0,3)});
     //players.add(Player(name, getColorFromString(color), teamSize));
     localPlayers.add(getColorFromString(color));
     ready[index] = true;
@@ -195,7 +196,7 @@ class _HostGame extends State<HostGame>{
   }
 
   void _triggerStart(){
-    Firestore.instance.collection(gameID.toString()).document('go').setData({'version':G.version});
+    Firestore.instance.collection(gameID.toString()).document('go').setData({'version':G.version.substring(0,3)});
   }
 
   void _showDialog(BuildContext context, String message) {

@@ -1,1 +1,1 @@
-String version;
+String version = "version not found";
