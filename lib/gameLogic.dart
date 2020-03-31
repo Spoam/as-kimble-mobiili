@@ -98,6 +98,7 @@ class GameLogic{
     if (index != null) {
       if (pieceData[n].color == pieceData[index].color) {
         pieceData[index].multiplier++;
+        if(pieceData[index].multiplier == 3) cache.play("triple3.mp3");
         pieceData[index].doubleMembers.add(n);
         pieceData[n].isInDouble = true;
         pieceData[n].atHome = false;
@@ -442,17 +443,36 @@ class GameLogic{
 
   Text getStatusText(int index){
 
+    var pieces = findPiece(turn.getCurrent());
+    PieceData piece = pieceData[pieces[index][1]];
+
     switch(index){
       case 0:
-        return canDouble[0] ? Text('Tuplaa') : pieceData[findPiece(turn.getCurrent())[0][1]].atHome ? Text('Uusi') :Text('Vika');
+        return canDouble[0] ? _multiplierCount(piece) : piece.atHome ? Text('Uusi') :Text('Vika');
       case 1:
-        return canDouble[1] ? Text('Tuplaa') : pieceData[findPiece(turn.getCurrent())[1][1]].atHome ? Text('Uusi') :Text('Kolmas');
+        return canDouble[1] ? _multiplierCount(piece) : piece.atHome ? Text('Uusi') :Text('Kolmas');
       case 2:
-        return canDouble[2] ? Text('Tuplaa') : pieceData[findPiece(turn.getCurrent())[2][1]].atHome ? Text('Uusi') :Text('Toka');
+        return canDouble[2] ? _multiplierCount(piece) : piece.atHome ? Text('Uusi') :Text('Toka');
       case 3:
-        return canDouble[3] ? Text('Tuplaa') : pieceData[findPiece(turn.getCurrent())[3][1]].atHome ? Text('Uusi') :Text('Kärki');
+        return canDouble[3] ? _multiplierCount(piece) : piece.atHome ? Text('Uusi') :Text('Kärki');
       default:
         return Text('väärä indeksi idiootti');
+    }
+  }
+
+  Text _multiplierCount(PieceData piece){
+
+    int index = _getPieceAt(piece.startPos + 1);
+
+    switch(pieceData[index].doubleMembers.length){
+      case 0:
+        return Text("Tupla");
+      case 1:
+        return Text("Tripla");
+      case 2:
+        return Text("Quatro");
+      default:
+        return Text("mitä vittua");
     }
   }
 

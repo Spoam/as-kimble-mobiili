@@ -123,7 +123,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
       if(online){
         _writeToDatabase(skipTurn);
       }else{
-        _handleTurn(null, skipTurn);
+        _handleTurn(skipTurn, -1);
       }
     }
   }
@@ -790,9 +790,9 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
                             }else{
 
                               if(logic.getLegalMoves().contains(true)) {
-                                _handleTurn(selectedPiece, skipTurn);
+                                _handleTurn(selectedPiece, -1);
                               }else{
-                                _handleTurn(null, skipTurn);
+                                _handleTurn(skipTurn, -1);
                               }
                             }
 
@@ -820,8 +820,8 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
                         onPressed: (){
                           setState(() {
                             if(online){
-                              _raise();
-                              //_writeToDatabase(-2);
+                              //_raise();
+                              _writeToDatabase(-2);
                             }else{
                               logic.raise();
                             }
