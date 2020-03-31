@@ -5,9 +5,13 @@ import 'package:kimble/winScreen.dart';
 import 'package:kimble/playerSelect.dart';
 import 'package:kimble/lobby.dart';
 import 'package:package_info/package_info.dart';
+import 'package:global_configuration/global_configuration.dart';
 import 'globals.dart' as G;
 
-void main() => runApp(MyApp());
+void main() async{
+  await GlobalConfiguration().loadFromAsset("settings");
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
 

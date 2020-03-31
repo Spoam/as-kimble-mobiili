@@ -167,7 +167,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
             decoration: BoxDecoration(
                 borderRadius: BorderRadius.all(Radius.circular(5)),
                 image: DecorationImage(
-                  image: AssetImage("res/textures/pips${logic.diceVal}.png"),
+                  image: AssetImage("assets/textures/pips${logic.diceVal}.png"),
                   fit: BoxFit.fill,
                 )
             )
