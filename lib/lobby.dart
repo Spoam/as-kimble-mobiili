@@ -466,6 +466,8 @@ class _HostGame extends State<HostGame>{
       }else if(type == JoinType.CONTINUE){
         oldName = name;
         _startGame(true);
+      }else if(type == JoinType.SPECTATE){
+        _startGame(false);
       }
       _waitForStart();
       first = false;
@@ -762,7 +764,31 @@ class _JoinGame extends State<JoinGame> {
               Navigator.pop(context);
             },
             child: Text('back'),
-          )
+          ),
+          Container( //start button
+              margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+              width: width / 2 - 20,
+              decoration: BoxDecoration(
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black54,
+                        offset: Offset(1, 1),
+                        blurRadius: 0.5,
+                        spreadRadius: 0.5
+                    ),
+                  ]
+              ),
+              child: MaterialButton(
+                onPressed: () {
+                  setState(() {
+                    _join(JoinType.SPECTATE);
+                  });
+                },
+                child: Text('Spectate'),
+              )
+          ),
         ],
       ),
     );
@@ -789,5 +815,6 @@ class GameArguments{
 enum JoinType{
   HOST,
   JOIN,
-  CONTINUE
+  CONTINUE,
+  SPECTATE
 }
