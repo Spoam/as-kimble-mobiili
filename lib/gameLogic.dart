@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:kimble/turnManager.dart';
 import 'package:audioplayers/audio_cache.dart';
+import 'globals.dart' as G;
 
 const int skipTurn = -1;
 const int raise = -2;
@@ -98,7 +99,7 @@ class GameLogic{
     if (index != null) {
       if (pieceData[n].color == pieceData[index].color) {
         pieceData[index].multiplier++;
-        if(pieceData[index].multiplier == 3) cache.play("triple3.mp3");
+        if(pieceData[index].multiplier == 3 && G.soundSettings["triple"]) cache.play("triple3.mp3");
         pieceData[index].doubleMembers.add(n);
         pieceData[n].isInDouble = true;
         pieceData[n].atHome = false;
@@ -338,11 +339,11 @@ class GameLogic{
     if(index != null){
       print('eating piece $index at $pos');
       if(pieceData[index].isMine){
-        cache.play('mine2.mp3');
+        if(G.soundSettings["mine"])cache.play('mine2.mp3');
         _eatPiece(n, pieceData[index].multiplier);
         return true;
       }else{
-        cache.play('eat1.mp3');
+        if(G.soundSettings["eat"]) cache.play('eat1.mp3');
         _eatPiece(index, pieceData[n].multiplier);
       }
     }

@@ -9,6 +9,7 @@ import 'package:audioplayers/audio_cache.dart';
 import 'package:kimble/gameLogic.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:kimble/turnManager.dart';
+import 'package:global_configuration/global_configuration.dart';
 import 'globals.dart' as G;
 
 
@@ -130,7 +131,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
 
 
   void _longPressEnd(LongPressEndDetails details) {
-    sound.play('naks-up-1.mp3');
+    if(G.soundSettings["naks"]) sound.play('naks-up-1.mp3');
     setState((){
       _rollDice();
     });
@@ -142,7 +143,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
 
   void _longPress(){
     diceController.forward();
-    sound.play('naks-down1.mp3');
+    if(!G.soundSettings["naks"])sound.play('naks-down1.mp3');
   }
 
   int attempts = 0;
@@ -155,7 +156,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
         onLongPress: _longPress,
         onTap: () {
           diceController.forward();
-          sound.play('naks-koko-2.mp3');
+          if(G.soundSettings["naks"])sound.play('naks-koko-2.mp3');
 
           setState(() {
              _rollDice();

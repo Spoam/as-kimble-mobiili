@@ -60,6 +60,7 @@ flutter:
     - assets/sound/eat1.mp3
     - assets/sound/korotus_cheer.mp3
     - assets/sound/triple3.mp3
+    - assets/cfg/settings.json
 
   #  - images/a_dot_ham.jpeg
 

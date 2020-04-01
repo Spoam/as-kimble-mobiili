@@ -5,11 +5,11 @@ import 'package:kimble/winScreen.dart';
 import 'package:kimble/playerSelect.dart';
 import 'package:kimble/lobby.dart';
 import 'package:package_info/package_info.dart';
-import 'package:global_configuration/global_configuration.dart';
+import 'settings.dart';
 import 'globals.dart' as G;
 
-void main() async{
-  await GlobalConfiguration().loadFromAsset("settings");
+void main() {
+
   runApp(MyApp());
 }
 
@@ -35,6 +35,7 @@ class MyApp extends StatelessWidget {
         '/playerselect/game/end':(BuildContext context) => WinScreen(),
         '/join/lobby' : (BuildContext context) => HostGame(),
         '/join' : (BuildContext context) => JoinGame(),
+        '/settings' : (BuildContext context) => Settings(),
       },
     );
   }
@@ -150,10 +151,32 @@ class _MainMenuState extends State<MainMenu> {
 
               },
               child:Text('Online'),
+              ),
             ),
+            Container(
+            width: width / 3,
+              margin: const EdgeInsets.fromLTRB(10,10,10,10),
+              decoration: BoxDecoration(
+              color: Colors.blue,
+              borderRadius: BorderRadius.all(Radius.circular(10)),
+              boxShadow:[
+              BoxShadow(
+                color: Colors.black54,
+                offset: Offset(1,1),
+                blurRadius: 0.5,
+                spreadRadius: 0.5
+                ),]
+              ),
+              child:MaterialButton(
+              onPressed:(){
+                Navigator.of(context).pushNamed('/settings');
+              }
+              ,
+               child:Text('Settings'),
+              ),
 
 
-          ),
+            ),
       ]),
     );
 
