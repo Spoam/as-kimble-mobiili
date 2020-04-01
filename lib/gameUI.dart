@@ -370,9 +370,10 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
       if(turnBuffer[0].pieceId == raise){
         sound.play('korotus_cheer.mp3');
         logic.raise();
+      }else{
+        _handleTurn(turnBuffer[0].pieceId, turnBuffer[0].diceVal);
       }
       logic.diceVal = turnBuffer[0].diceVal;
-      _handleTurn(turnBuffer[0].pieceId, turnBuffer[0].diceVal);
     });
 
     turnBuffer.removeAt(0);
@@ -458,7 +459,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
         //brown means not a color
         if(getColorFromString(doc.documentID) != Colors.brown){
           Player p = logic.getPlayerByColor(getColorFromString(doc.documentID));
-          p.drunk = doc.data['drunk'];
+          if(turnBuffer.length < 4)p.drunk = doc.data['drunk'];
           if(logic.isWinner()) Navigator.of(context).pushNamed('/playerselect/game/end', arguments: players);
         }else if(doc.documentID == "accept"){
           if(!localPlayers.contains(logic.turn.getCurrent())){
