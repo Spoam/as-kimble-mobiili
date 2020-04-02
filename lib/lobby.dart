@@ -481,7 +481,7 @@ class _HostGame extends State<HostGame>{
         child:Scaffold(
           backgroundColor: Colors.white30,
           appBar: AppBar(
-            title:Text('Pelaajat'),
+            title:Text('Lobby'),
           ),
         body:ListView(
 
@@ -603,7 +603,7 @@ class _JoinGame extends State<JoinGame> {
     return Scaffold(
       backgroundColor: Colors.white30,
       appBar: AppBar(
-        title: Text('Pelaajat'),
+        title: Text('Online ver ${G.version}'),
       ),
       body: ListView(
 
@@ -645,12 +645,16 @@ class _JoinGame extends State<JoinGame> {
               child: TextFormField(
                 textInputAction: TextInputAction.next,
                 textAlign: TextAlign.center,
+                maxLength : 20,
                 controller: nameInput,
                 style: TextStyle(
                   fontSize: pieceSize * 1.5,
                 ),
-                decoration: InputDecoration.collapsed(
+                decoration: InputDecoration(
                   hintText: 'name here',
+                  counter: Offstage(),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.fromLTRB(0, 10, 0, 0),
                 ),
               ),
               ),
@@ -759,13 +763,7 @@ class _JoinGame extends State<JoinGame> {
                 child: Text('Continue'),
               )
           ),
-          FloatingActionButton( //back button
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text('back'),
-          ),
-          Container( //start button
+          Container( //spectate
               margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
               width: width / 2 - 20,
               decoration: BoxDecoration(
@@ -787,8 +785,15 @@ class _JoinGame extends State<JoinGame> {
                   });
                 },
                 child: Text('Spectate'),
-              )
+              ),
           ),
+          FloatingActionButton( //back button
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('back'),
+          ),
+
         ],
       ),
     );

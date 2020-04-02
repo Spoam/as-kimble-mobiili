@@ -366,6 +366,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
 
     turnsHandled++;
 
+    logic.diceVal = turnBuffer[0].diceVal;
     setState(() {
       if(turnBuffer[0].pieceId == raise){
         sound.play('korotus_cheer.mp3');
@@ -373,7 +374,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
       }else{
         _handleTurn(turnBuffer[0].pieceId, turnBuffer[0].diceVal);
       }
-      logic.diceVal = turnBuffer[0].diceVal;
+
     });
 
     turnBuffer.removeAt(0);

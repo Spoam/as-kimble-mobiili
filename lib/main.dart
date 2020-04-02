@@ -95,7 +95,7 @@ class _MainMenuState extends State<MainMenu> {
           ),
           G.version.substring(0,3) != newest.substring(0,3) ? Container(
             width: width,
-            color: Colors.lightBlue,
+            color: Colors.white,
             child: Text("ERROR. APP VERSION TOO OLD FOR ONLINE PLAY",
               style: TextStyle(
                 color: Colors.red,
