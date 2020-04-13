@@ -6,6 +6,7 @@ import 'package:kimble/playerSelect.dart';
 import 'package:kimble/lobby.dart';
 import 'package:package_info/package_info.dart';
 import 'settings.dart';
+import 'package:audioplayers/audio_cache.dart';
 import 'globals.dart' as G;
 
 void main() {
@@ -14,7 +15,6 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-
 
   // This widget is the root of your application.
   @override
@@ -53,6 +53,15 @@ class MainMenu extends StatefulWidget {
 class _MainMenuState extends State<MainMenu> {
 
   String newest = "version not found";
+
+  AudioCache sound = AudioCache(prefix: 'sound/');
+
+  @override
+  void initState(){
+    super.initState();
+    sound.load('button.mp3');
+    sound.disableLog();
+  }
 
   Future<String> getVersionNumber() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
@@ -119,6 +128,7 @@ class _MainMenuState extends State<MainMenu> {
             ),
             child:MaterialButton(
             onPressed:(){
+              sound.play("button.mp3");
               Navigator.of(context).pushNamed('/playerselect');
               },
               child:Text('Local'),
@@ -142,10 +152,11 @@ class _MainMenuState extends State<MainMenu> {
             ),
             child:MaterialButton(
               onPressed:(){
+                sound.play("button.mp3");
                 setState(() {
 
                 });
-                if(G.version.substring(0,3) == newest.substring(0,3)){
+                if(double.parse(G.version.substring(0,3)) >= double.parse(newest.substring(0,3))){
                   Navigator.of(context).pushNamed('/join');
                 }
 
@@ -169,6 +180,7 @@ class _MainMenuState extends State<MainMenu> {
               ),
               child:MaterialButton(
               onPressed:(){
+                sound.play("button.mp3");
                 Navigator.of(context).pushNamed('/settings');
               }
               ,

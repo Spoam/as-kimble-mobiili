@@ -5,4 +5,5 @@ Map<String, bool> soundSettings = {
   "naks"	: true,
   "eat"		: true,
   "mine"	: true,
+  "button" :true,
 };

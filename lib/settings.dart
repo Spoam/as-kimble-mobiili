@@ -62,6 +62,7 @@ class _SettingsState extends State<Settings> {
             _buildToggle("korotus", width),
             _buildToggle("naks", width),
             _buildToggle("mine", width),
+            _buildToggle("button", width),
             Container(
               width: width / 5,
               margin: const EdgeInsets.fromLTRB(10,10,10,10),

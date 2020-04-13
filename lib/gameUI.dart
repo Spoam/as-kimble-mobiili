@@ -9,7 +9,6 @@ import 'package:audioplayers/audio_cache.dart';
 import 'package:kimble/gameLogic.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:kimble/turnManager.dart';
-import 'package:global_configuration/global_configuration.dart';
 import 'globals.dart' as G;
 
 
@@ -34,6 +33,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
   List<Player> players;
   List<Color> localPlayers;
   bool gameOver = false;
+  bool raiseAllowed = true;
 
   bool online;
   int gameID;
@@ -322,6 +322,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
             new FlatButton(
               child: new Text("YES!"),
               onPressed: () {
+                sound.play("button.mp3");
                 localPlayers.forEach((color) => {
                   logic.getPlayerByColor(color).acceptRaise = true,
                   doc.document("${getStringFromColor(color)}").setData({"answer" : true}),
@@ -333,6 +334,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
             new FlatButton(
               child: new Text("NO :("),
               onPressed: () {
+                sound.play("button.mp3");
                 localPlayers.forEach((color) => {
                   logic.getPlayerByColor(color).acceptRaise = false,
                   doc.document("${getStringFromColor(color)}").setData({"answer" : false}),
@@ -406,6 +408,152 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
   }
 
 
+  _editDrinks(Color col){
+
+    Player p = logic.getPlayerByColor(col);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return Dialog(
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20.0)),
+          backgroundColor: Color.fromARGB(255, 50, 50, 50),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Container(
+                height: pieceSize * 1.5,
+                margin: EdgeInsets.fromLTRB(10, 10, 10, 20),
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.all(Radius.circular(10))
+                ),
+                child: FlatButton(
+                  child: raiseAllowed ? Text("Kiellä korotus", textScaleFactor: 1.5,) : Text("Salli korotus", textScaleFactor: 1.5,),
+                  onPressed: () {
+                    sound.play("button.mp3");
+                    _toggleRaise();
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
+              Container(
+                  height: pieceSize * 2,
+                  margin: EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+
+                  ),
+                  child: Align(alignment: Alignment.center, child: Text("Joukkueen ${p.name} juomat", textScaleFactor: 1.5,))
+              ),
+              Container(
+                height: pieceSize * 1.5,
+                margin: EdgeInsets.fromLTRB(10, 0, 10, 5),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+
+                ),
+                child:Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children:[
+                    Text("Juotu: ${p.drunk}", textScaleFactor: 1.5),
+                    IconButton(icon: Icon(Icons.plus_one, size: pieceSize,), onPressed: (){sound.play("button.mp3"); _addDrink(col, 1); Navigator.pop(context);},),
+                    IconButton(icon: Icon(Icons.exposure_neg_1, size:  pieceSize,), onPressed: (){sound.play("button.mp3"); _addDrink(col, -1); Navigator.pop(context);}),
+                  ],
+                ),
+              ),
+              Container(
+                height: pieceSize * 1.5,
+                margin: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                ),
+                child:Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children:[
+                    Text("Sakot: ${p.drinks}", textScaleFactor: 1.5,),
+                    IconButton(icon: Icon(Icons.plus_one, size: pieceSize,), onPressed: (){sound.play("button.mp3"); _addPenalty(col, 1); Navigator.pop(context);},),
+                    IconButton(icon: Icon(Icons.exposure_neg_1, size:  pieceSize,), onPressed: (){sound.play("button.mp3"); _addPenalty(col, -1); Navigator.pop(context);}),
+                  ],
+                ),
+              ),
+              Container(
+                height: pieceSize * 1.5,
+                margin: EdgeInsets.fromLTRB(10, 15, 10, 5),
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                ),
+                child:FlatButton(
+                  child: new Text("Back"),
+                  onPressed: () {
+                    sound.play("button.mp3");
+                    Navigator.pop(context);
+                    return false;
+                  },
+                )
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  _toggleRaise(){
+    if(online){
+      raiseAllowed = !raiseAllowed;
+      DocumentReference doc = Firestore.instance.collection(gameID.toString()).document("raiseStatus");
+      doc.setData({'status' : raiseAllowed, 'version' : G.version.substring(0,3)});
+    }else{
+      raiseAllowed = !raiseAllowed;
+    }
+  }
+
+  _addDrink(Color col, int amount){
+      if(logic.getPlayerByColor(col).drunk < logic.getPlayerByColor(col).drinks || amount < 0){
+        if(online){
+          setState(() {
+            logic.getPlayerByColor(col).drunk += amount;
+            _addDrinkToDatabase(getStringFromColor(col) ,true);
+          });
+        }else{
+          setState(() {
+            logic.getPlayerByColor(col).drunk += amount;
+          });
+        }
+        if(logic.checkWin(col)) Navigator.of(context).pushNamed('/playerselect/game/end', arguments: players);
+      }
+  }
+
+  _addPenalty(Color col, int amount){
+      if(online){
+        setState(() {
+          logic.getPlayerByColor(col).drinks += amount;
+          _addPenaltyToDatabase(getStringFromColor(col) ,true);
+        });
+      }else{
+        setState(() {
+          logic.getPlayerByColor(col).drinks += amount;
+        });
+      }
+      if(logic.checkWin(col)) Navigator.of(context).pushNamed('/playerselect/game/end', arguments: players);
+  }
+
+  _addPenaltyToDatabase(String color, bool drink){
+    CollectionReference col = Firestore.instance.collection(gameID.toString());
+    if (drink) {
+      col.document(color)
+          .updateData({'drinks': logic.getPlayerByColor(getColorFromString(color)).drinks});
+    }
+  }
+
   Widget _buildPlayerInfo(Color col){
     return Container(
               margin: const EdgeInsets.fromLTRB(10,5,10,5),
@@ -420,22 +568,10 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
                       children:logic.getPlayerByColor(col).getPlayerInfo(pieceSize),
                     ),
                     host ? IconButton(
-                      icon: Icon(Icons.plus_one,size: pieceSize),
+                      icon: Icon(Icons.local_bar,size: pieceSize),
                       onPressed: (){
-                        setState((){
-                          if(logic.getPlayerByColor(col).drunk < logic.getPlayerByColor(col).drinks){
-                            if(online){
-                              setState(() {
-                                logic.getPlayerByColor(col).drunk++;
-                                _addDrinkToDatabase(getStringFromColor(col) ,true);
-                              });
-                            }else{
-                              logic.getPlayerByColor(col).drunk++;
-                            }
-                            if(logic.checkWin(col)) Navigator.of(context).pushNamed('/playerselect/game/end', arguments: players);
-                          }
-
-                        });
+                        sound.play("button.mp3");
+                        _editDrinks(col);
                       },
                     ): Container()
                   ]
@@ -467,6 +603,8 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
           if(!localPlayers.contains(logic.turn.getCurrent())){
             _pollRaiseMessage();
           }
+        }else if(doc.documentID == "raiseStatus"){
+          raiseAllowed = doc.data['status'];
         }
 
       });
@@ -488,9 +626,8 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
   void _addDrinkToDatabase(String color, bool drink) {
     CollectionReference col = Firestore.instance.collection(gameID.toString());
     if (drink) {
-      col.document(color).updateData({'drunk': logic
-          .getPlayerByColor(getColorFromString(color))
-          .drunk});
+      col.document(color)
+          .updateData({'drunk': logic.getPlayerByColor(getColorFromString(color)).drunk});
     }
   }
 
@@ -521,6 +658,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
     sound.load('naks-up-1.mp3');
     sound.load('naks-down1.mp3');
     sound.load('korotus_cheer.mp3');
+    sound.load("button.mp3");
     sound.disableLog();
 
     controller = AnimationController(
@@ -822,15 +960,17 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
                       ),
                       child: MaterialButton(
                         onPressed: (){
-                          setState(() {
-                            if(online){
-                              //_raise();
-                              _writeToDatabase(raise);
-                            }else{
-                              logic.raise();
-                            }
+                          if(raiseAllowed){
+                            setState(() {
+                              if(online){
+                                _writeToDatabase(raise);
+                              }else{
+                                logic.raise();
+                              }
 
-                          });
+                            });
+                          }
+
                         },
                         child: Text('Korota'),
                       ),
