@@ -75,7 +75,7 @@ class _HostGame extends State<HostGame>{
 
     //can't host game with same id unless the game is no longer active
     if (snapshot != null && snapshot.exists) {
-      if(snapshot.data['isActive'] == 1){
+      if(snapshot.data['isActive'] == true){
         _showDialog(context ,"A lobby with that ID already exists");
         return;
       }
@@ -83,7 +83,7 @@ class _HostGame extends State<HostGame>{
 
     var db = Firestore.instance.collection(gameID.toString());
     print(G.version.substring(0,3));
-    db.document('isActive').setData({'version' : G.version.substring(0,3)});
+    db.document('isActive').setData({'version' : G.version.substring(0,3), 'isActive' : true});
     db.document('red').setData({'color' : 'red', 'name' : name, 'team' : teamSize, 'drinks' : 0, 'drunk' : 0, 'raises' : 0, 'version' : G.version.substring(0,3)});
     //players.add(Player(name, Colors.red, teamSize));
     localPlayers.add(Colors.red);
