@@ -412,7 +412,7 @@ class _HostGame extends State<HostGame>{
   void _leave(){
     CollectionReference reference = Firestore.instance.collection(gameID.toString());
     localPlayers.forEach((p) => reference.document(getStringFromColor(p)).delete());
-    if(host) reference.document("isActive").delete();
+    //if(host) reference.document("isActive").delete();
   }
 
   StreamBuilder<QuerySnapshot> _playerStream(){
