@@ -418,15 +418,18 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
         // return object of type Dialog
         return Dialog(
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20.0)),
+              borderRadius: BorderRadius.circular(20.0),
+
+          ),
           backgroundColor: Color.fromARGB(255, 50, 50, 50),
+
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               Container(
                 height: pieceSize * 1.5,
-                margin: EdgeInsets.fromLTRB(10, 10, 10, 20),
+                margin: EdgeInsets.fromLTRB(5, 10, 5, 20),
                 decoration: BoxDecoration(
                   color: Colors.blue,
                   borderRadius: BorderRadius.all(Radius.circular(10))
@@ -442,7 +445,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
               ),
               Container(
                   height: pieceSize * 2,
-                  margin: EdgeInsets.all(10),
+                  margin: EdgeInsets.all(5),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.all(Radius.circular(10)),
@@ -452,7 +455,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
               ),
               Container(
                 height: pieceSize * 1.5,
-                margin: EdgeInsets.fromLTRB(10, 0, 10, 5),
+                margin: EdgeInsets.fromLTRB(5, 5, 5, 5),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.all(Radius.circular(10)),
@@ -462,14 +465,28 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children:[
                     Text("Juotu: ${p.drunk}", textScaleFactor: 1.5),
-                    IconButton(icon: Icon(Icons.plus_one, size: pieceSize,), onPressed: (){sound.play("button.mp3"); _addDrink(col, 1); Navigator.pop(context);},),
-                    IconButton(icon: Icon(Icons.exposure_neg_1, size:  pieceSize,), onPressed: (){sound.play("button.mp3"); _addDrink(col, -1); Navigator.pop(context);}),
+                    GestureDetector(
+                      child: Icon(Icons.exposure_plus_1, size: pieceSize,),
+                      onTap: (){sound.play("button.mp3"); _addDrink(col, 1); Navigator.pop(context);},
+                    ),
+                    GestureDetector(
+                      child: Icon(Icons.exposure_plus_2, size: pieceSize,),
+                      onTap: (){sound.play("button.mp3"); _addDrink(col, 2); Navigator.pop(context);},
+                    ),
+                    GestureDetector(
+                      child: Icon(Icons.exposure_neg_1, size: pieceSize,),
+                      onTap: (){sound.play("button.mp3"); _addDrink(col, -1); Navigator.pop(context);},
+                    ),
+                    GestureDetector(
+                        child: Icon(Icons.exposure_neg_2, size: pieceSize,),
+                        onTap: (){sound.play("button.mp3"); _addDrink(col, -2); Navigator.pop(context);}
+                    ),
                   ],
                 ),
               ),
               Container(
                 height: pieceSize * 1.5,
-                margin: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                margin: EdgeInsets.fromLTRB(5, 5, 5, 5),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.all(Radius.circular(10)),
@@ -478,8 +495,10 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children:[
                     Text("Sakot: ${p.drinks}", textScaleFactor: 1.5,),
-                    IconButton(icon: Icon(Icons.plus_one, size: pieceSize,), onPressed: (){sound.play("button.mp3"); _addPenalty(col, 1); Navigator.pop(context);},),
-                    IconButton(icon: Icon(Icons.exposure_neg_1, size:  pieceSize,), onPressed: (){sound.play("button.mp3"); _addPenalty(col, -1); Navigator.pop(context);}),
+                    GestureDetector(child: Icon(Icons.exposure_plus_1, size: pieceSize,), onTap: (){sound.play("button.mp3"); _addPenalty(col, 1); Navigator.pop(context);},),
+                    GestureDetector(child: Icon(Icons.exposure_plus_2, size:  pieceSize,), onTap: (){sound.play("button.mp3"); _addPenalty(col, 2); Navigator.pop(context);}),
+                    GestureDetector(child: Icon(Icons.exposure_neg_1, size: pieceSize,), onTap: (){sound.play("button.mp3"); _addPenalty(col, -1); Navigator.pop(context);},),
+                    GestureDetector(child: Icon(Icons.exposure_neg_2, size:  pieceSize,), onTap: (){sound.play("button.mp3"); _addPenalty(col, -2); Navigator.pop(context);}),
                   ],
                 ),
               ),
@@ -517,7 +536,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
   }
 
   _addDrink(Color col, int amount){
-      if(logic.getPlayerByColor(col).drunk < logic.getPlayerByColor(col).drinks || amount < 0){
+      if(logic.getPlayerByColor(col).drunk + amount <= logic.getPlayerByColor(col).drinks || amount < 0){
         if(online){
           setState(() {
             logic.getPlayerByColor(col).drunk += amount;
@@ -995,7 +1014,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
             actions: [
               FlatButton(
                 child: Text('Joo'),
-                onPressed: () => Navigator.of(context).popUntil(ModalRoute.withName('/join')),
+                onPressed: () => Navigator.pop(c, true),
               ),
               FlatButton(
                 child: Text('En'),

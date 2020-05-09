@@ -32,12 +32,7 @@ class Player{
             fontSize: pieceSize / 1.4 - (name.length / 6 ) * (name.length / 6),
           ),
         ),
-        Text('  juotu:$drunk',
-          style: TextStyle(
-            fontSize: pieceSize / 1.5,
-          ),
-        ),
-        Text('  sakot:$drinks  ',
+        Text('  sakot: $drunk/$drinks  ',
           style: TextStyle(
             fontSize: pieceSize / 1.5,
           ),
