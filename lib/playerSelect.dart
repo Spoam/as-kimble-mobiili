@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:kimble/lobby.dart';
 import 'package:kimble/player.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 
 class PlayerSelectScreen extends StatefulWidget{
@@ -172,7 +174,7 @@ class _PlayerSelectScreenState extends State<PlayerSelectScreen>{
       return Scaffold(
         backgroundColor: Colors.white30,
         appBar: AppBar(
-        title:Text('Pelaajat'),
+        title:Text('players').tr(),
         ),
         body:ListView(
 
@@ -201,7 +203,7 @@ class _PlayerSelectScreenState extends State<PlayerSelectScreen>{
                     _startGame();
                   });
                 },
-                child: Text('Aloita'),
+                child: Text('start_play').tr(),
               )
             ),
             Container( //start button
@@ -224,14 +226,14 @@ class _PlayerSelectScreenState extends State<PlayerSelectScreen>{
                       _continue();
                     });
                   },
-                  child: Text('jatka'),
+                  child: Text('continue').tr(),
                 )
             ),
             FloatingActionButton(//back button
               onPressed:(){
               Navigator.pop(context);
               },
-              child:Text('back'),
+              child:Text('back').tr(),
           )
           ],
         ),

@@ -7,11 +7,21 @@ import 'package:kimble/lobby.dart';
 import 'package:package_info/package_info.dart';
 import 'settings.dart';
 import 'package:audioplayers/audio_cache.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'globals.dart' as G;
 
 void main() {
 
-  runApp(MyApp());
+  runApp(
+    EasyLocalization(
+        supportedLocales: [Locale('en', 'US'), Locale('fi', 'FI')],
+        path: 'assets/translations', // <-- change patch to your
+        fallbackLocale: Locale('en', 'US'),
+        preloaderColor: Colors.white10,
+        child: MyApp()
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -28,6 +38,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
+      localizationsDelegates: context.localizationDelegates,
+      supportedLocales: context.supportedLocales,
+      locale: context.locale,
       home: MainMenu(title: 'Kimblen päävalikko'),
       routes: <String, WidgetBuilder> {
         '/playerselect' : (BuildContext context) => PlayerSelectScreen(),
@@ -131,7 +144,7 @@ class _MainMenuState extends State<MainMenu> {
               sound.play("button.mp3");
               Navigator.of(context).pushNamed('/playerselect');
               },
-              child:Text('Local'),
+              child:Text('start_local').tr(),
             ),
 
 
@@ -161,7 +174,7 @@ class _MainMenuState extends State<MainMenu> {
                 }
 
               },
-              child:Text('Online'),
+              child:Text('start_online').tr(),
               ),
             ),
             Container(
@@ -184,11 +197,35 @@ class _MainMenuState extends State<MainMenu> {
                 Navigator.of(context).pushNamed('/settings');
               }
               ,
-               child:Text('Settings'),
+               child:Text('settings'.tr()),
               ),
-
-
             ),
+          Container(
+            width: width / 3,
+            margin: const EdgeInsets.fromLTRB(10,10,10,10),
+            decoration: BoxDecoration(
+                color: Colors.blue,
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+                boxShadow:[
+                  BoxShadow(
+                      color: Colors.black54,
+                      offset: Offset(1,1),
+                      blurRadius: 0.5,
+                      spreadRadius: 0.5
+                  ),]
+            ),
+            child:MaterialButton(
+              onPressed:(){
+                sound.play("button.mp3");
+                setState(() {
+                  context.locale = context.locale == Locale('fi','FI') ? Locale('en', 'US') : Locale('fi', 'FI');
+                });
+                print(context.locale.toString());
+              }
+              ,
+              child:Text('switch_locale').tr(),
+            ),
+          ),
       ]),
     );
 

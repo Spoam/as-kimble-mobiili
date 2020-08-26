@@ -9,6 +9,8 @@ import 'package:audioplayers/audio_cache.dart';
 import 'package:kimble/gameLogic.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:kimble/turnManager.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'globals.dart' as G;
 
 
@@ -250,7 +252,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
     });
   }
 
-  void _raise(){
+  /*void _raise(){
     if(logic.getPlayerByColor(logic.turn.getCurrent()).raises > 0){
       if(!players.every((p) => p.acceptRaise)){
         logic.getPlayerByColor(logic.turn.getCurrent()).acceptRaise = true;
@@ -346,7 +348,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
         );
       },
     );
-  }
+  }*/
 
   void _turnFromDatabase(){
 
@@ -435,7 +437,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
                   borderRadius: BorderRadius.all(Radius.circular(10))
                 ),
                 child: FlatButton(
-                  child: raiseAllowed ? Text("Kiellä korotus", textScaleFactor: 1.5,) : Text("Salli korotus", textScaleFactor: 1.5,),
+                  child: raiseAllowed ? Text('ban_raise', textScaleFactor: 1.5,).tr() : Text('allow_raise', textScaleFactor: 1.5,).tr(),
                   onPressed: () {
                     sound.play("button.mp3");
                     _toggleRaise();
@@ -451,7 +453,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
                     borderRadius: BorderRadius.all(Radius.circular(10)),
 
                   ),
-                  child: Align(alignment: Alignment.center, child: Text("Joukkueen ${p.name} juomat", textScaleFactor: 1.5,))
+                  child: Align(alignment: Alignment.center, child: Text("drink_management", textScaleFactor: 1.5,).tr(args: [p.name]))
               ),
               Container(
                 height: pieceSize * 1.5,
@@ -464,7 +466,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
                 child:Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children:[
-                    Text("Juotu: ${p.drunk}", textScaleFactor: 1.5),
+                    Text('drink_amount', textScaleFactor: 1.5).plural(p.drunk),
                     GestureDetector(
                       child: Icon(Icons.exposure_plus_1, size: pieceSize,),
                       onTap: (){sound.play("button.mp3"); _addDrink(col, 1); Navigator.pop(context);},
@@ -494,7 +496,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
                 child:Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children:[
-                    Text("Sakot: ${p.drinks}", textScaleFactor: 1.5,),
+                    Text('penalty_amount', textScaleFactor: 1.5,).plural(p.drinks),
                     GestureDetector(
                       child: Icon(Icons.exposure_plus_1, size: pieceSize,),
                       onTap: (){sound.play("button.mp3"); _addPenalty(col, 1); Navigator.pop(context);},),
@@ -518,7 +520,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                 ),
                 child:FlatButton(
-                  child: new Text("Back"),
+                  child: new Text("back").tr(),
                   onPressed: () {
                     sound.play("button.mp3");
                     Navigator.pop(context);
@@ -628,7 +630,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
           if(logic.isWinner()) Navigator.of(context).pushNamed('/playerselect/game/end', arguments: players);
         }else if(doc.documentID == "accept"){
           if(!localPlayers.contains(logic.turn.getCurrent())){
-            _pollRaiseMessage();
+            //_pollRaiseMessage();
           }
         }else if(doc.documentID == "raiseStatus"){
           raiseAllowed = doc.data['status'];
@@ -638,7 +640,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
     });
   }
 
-  void _listenForAnswer(){
+  /*void _listenForAnswer(){
     CollectionReference reference = Firestore.instance.collection(gameID.toString()).document("accept").collection("players");
     answerSub = reference.snapshots().listen((querySnapshot) {
       querySnapshot.documentChanges.forEach((change){
@@ -648,7 +650,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
       });
 
     });
-  }
+  }*/
 
   void _addDrinkToDatabase(String color, bool drink) {
     CollectionReference col = Firestore.instance.collection(gameID.toString());
@@ -968,7 +970,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
 
                           });
                         },
-                        child: Text('Liiku'),
+                        child: Text('move').tr(),
                       ),
                     ) : Container(),
                     logic.canRaise ? Container(
@@ -999,7 +1001,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
                           }
 
                         },
-                        child: Text('Korota'),
+                        child: Text('raise').tr(),
                       ),
                     ) : Container(),
                   ]
@@ -1017,15 +1019,15 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
         onWillPop: () => showDialog<bool>(
           context: context,
           builder: (c) => AlertDialog(
-            title: Text('Warning'),
-            content: Text('Haluatko lopettaa pelin?'),
+            title: Text('warning').tr(),
+            content: Text('quit_confirm').tr(),
             actions: [
               FlatButton(
-                child: Text('Joo'),
+                child: Text('yes').tr(),
                 onPressed: () => Navigator.pop(c, true),
               ),
               FlatButton(
-                child: Text('En'),
+                child: Text('no').tr(),
                 onPressed: () => Navigator.pop(c, false),
               ),
             ],

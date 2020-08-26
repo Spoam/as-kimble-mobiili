@@ -5,6 +5,7 @@ import 'package:kimble/winScreen.dart';
 import 'package:kimble/playerSelect.dart';
 import 'package:kimble/lobby.dart';
 import 'package:package_info/package_info.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'globals.dart' as G;
 
 class Settings extends StatefulWidget {
@@ -26,7 +27,7 @@ class _SettingsState extends State<Settings> {
               textAlign: TextAlign.left,
               style: TextStyle(
                 fontSize: width / 12
-              ),),
+              ),).tr(),
             Switch(
                 value: G.soundSettings[name],
                 onChanged: (value){setState(() {
@@ -52,10 +53,10 @@ class _SettingsState extends State<Settings> {
             Container(
               width: width,
               margin: const EdgeInsets.all(10),
-              child: Text("Sound Settings",
+              child: Text("sound_settings",
                 style: TextStyle(
                   fontSize: width / 10
-                ),),
+                ),).tr(),
             ),
             _buildToggle("triple", width),
             _buildToggle("eat", width),
@@ -82,7 +83,7 @@ class _SettingsState extends State<Settings> {
                     Navigator.pop(context);
                   }
                   ,
-                child:Text('Back'),
+                child:Text('back').tr(),
               ),
 
 

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class PlayerList{
   List<Player> players = List(4);
@@ -25,6 +27,8 @@ class Player{
     List<Widget> stars = [];
     List<Widget> stars2 = [];
 
+    String penaltiesText = tr('penalties');
+
     List<Widget> info = [
         Icon(Icons.brightness_1,color: color, size: pieceSize * 1.5),
         Text('  $name',
@@ -32,7 +36,7 @@ class Player{
             fontSize: pieceSize / 1.4 - (name.length / 6 ) * (name.length / 6),
           ),
         ),
-        Text('  sakot: $drunk/$drinks  ',
+        Text('  $penaltiesText: $drunk/$drinks  ',
           style: TextStyle(
             fontSize: pieceSize / 1.5,
           ),

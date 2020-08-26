@@ -5,6 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:math';
 import 'dart:core';
 import 'package:kimble/colors.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'globals.dart' as G;
 
 
@@ -211,7 +213,7 @@ class _HostGame extends State<HostGame>{
           actions: <Widget>[
             // usually buttons at the bottom of the dialog
             new FlatButton(
-              child: new Text("Back"),
+              child: new Text("back").tr(),
               onPressed: () {
                 _leave();
                 Navigator.of(context).popUntil(ModalRoute.withName('/join'));
@@ -229,12 +231,12 @@ class _HostGame extends State<HostGame>{
       builder: (BuildContext context) {
         // return object of type Dialog
         return AlertDialog(
-          title: new Text("Warning"),
-          content: new Text("Are you sure you want to leave?"),
+          title: new Text("warning").tr(),
+          content: new Text("are_you_sure").tr(),
           actions: <Widget>[
             // usually buttons at the bottom of the dialog
             new FlatButton(
-              child: new Text("Leave"),
+              child: new Text("leave").tr(),
               onPressed: () {
                 _leave();
                 Navigator.of(context).popUntil(ModalRoute.withName('/join'));
@@ -242,7 +244,7 @@ class _HostGame extends State<HostGame>{
               },
             ),
             new FlatButton(
-              child: new Text("Cancel"),
+              child: new Text("cancel").tr(),
               onPressed: () {
                 Navigator.pop(context);
                 return false;
@@ -712,7 +714,7 @@ class _JoinGame extends State<JoinGame> {
                     _join(JoinType.JOIN);
                   });
                 },
-                child: Text('Join'),
+                child: Text('join').tr(),
               )
           ),
           Container( //start button
@@ -736,7 +738,7 @@ class _JoinGame extends State<JoinGame> {
                     _join(JoinType.HOST);
                   });
                 },
-                child: Text('Host'),
+                child: Text('host').tr(),
               )
           ),
           Container( //start button
@@ -760,7 +762,7 @@ class _JoinGame extends State<JoinGame> {
                     _join(JoinType.CONTINUE);
                   });
                 },
-                child: Text('Continue'),
+                child: Text('continue').tr(),
               )
           ),
           Container( //spectate
@@ -784,18 +786,19 @@ class _JoinGame extends State<JoinGame> {
                     _join(JoinType.SPECTATE);
                   });
                 },
-                child: Text('Spectate'),
+                child: Text('spectate').tr(),
               ),
           ),
           FloatingActionButton( //back button
             onPressed: () {
               Navigator.pop(context);
             },
-            child: Text('back'),
+            child: Text('back').tr(),
           ),
 
         ],
       ),
+
     );
   }
 }

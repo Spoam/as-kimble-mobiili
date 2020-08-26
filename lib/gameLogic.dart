@@ -4,6 +4,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:kimble/turnManager.dart';
 import 'package:audioplayers/audio_cache.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'globals.dart' as G;
 
 const int skipTurn = -1;
@@ -449,13 +451,13 @@ class GameLogic{
 
     switch(index){
       case 0:
-        return canDouble[0] ? _multiplierCount(piece) : piece.atHome ? Text('Uusi') :Text('Vika');
+        return canDouble[0] ? _multiplierCount(piece) : piece.atHome ? Text('new').tr() :Text('last').tr();
       case 1:
-        return canDouble[1] ? _multiplierCount(piece) : piece.atHome ? Text('Uusi') :Text('Kolmas');
+        return canDouble[1] ? _multiplierCount(piece) : piece.atHome ? Text('new').tr() :Text('third').tr();
       case 2:
-        return canDouble[2] ? _multiplierCount(piece) : piece.atHome ? Text('Uusi') :Text('Toka');
+        return canDouble[2] ? _multiplierCount(piece) : piece.atHome ? Text('new').tr() :Text('second'.tr());
       case 3:
-        return canDouble[3] ? _multiplierCount(piece) : piece.atHome ? Text('Uusi') :Text('Kärki');
+        return canDouble[3] ? _multiplierCount(piece) : piece.atHome ? Text('new').tr() :Text('front').tr();
       default:
         return Text('väärä indeksi idiootti');
     }
