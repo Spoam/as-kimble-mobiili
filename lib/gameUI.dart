@@ -495,10 +495,18 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children:[
                     Text("Sakot: ${p.drinks}", textScaleFactor: 1.5,),
-                    GestureDetector(child: Icon(Icons.exposure_plus_1, size: pieceSize,), onTap: (){sound.play("button.mp3"); _addPenalty(col, 1); Navigator.pop(context);},),
-                    GestureDetector(child: Icon(Icons.exposure_plus_2, size:  pieceSize,), onTap: (){sound.play("button.mp3"); _addPenalty(col, 2); Navigator.pop(context);}),
-                    GestureDetector(child: Icon(Icons.exposure_neg_1, size: pieceSize,), onTap: (){sound.play("button.mp3"); _addPenalty(col, -1); Navigator.pop(context);},),
-                    GestureDetector(child: Icon(Icons.exposure_neg_2, size:  pieceSize,), onTap: (){sound.play("button.mp3"); _addPenalty(col, -2); Navigator.pop(context);}),
+                    GestureDetector(
+                      child: Icon(Icons.exposure_plus_1, size: pieceSize,),
+                      onTap: (){sound.play("button.mp3"); _addPenalty(col, 1); Navigator.pop(context);},),
+                    GestureDetector(
+                        child: Icon(Icons.exposure_plus_2, size:  pieceSize,),
+                        onTap: (){sound.play("button.mp3"); _addPenalty(col, 2); Navigator.pop(context);}),
+                    GestureDetector(
+                      child: Icon(Icons.exposure_neg_1, size: pieceSize,),
+                      onTap: (){sound.play("button.mp3"); _addPenalty(col, -1); Navigator.pop(context);},),
+                    GestureDetector(
+                        child: Icon(Icons.exposure_neg_2, size:  pieceSize,),
+                        onTap: (){sound.play("button.mp3"); _addPenalty(col, -2); Navigator.pop(context);}),
                   ],
                 ),
               ),
