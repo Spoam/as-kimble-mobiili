@@ -626,6 +626,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
         if(getColorFromString(doc.documentID) != Colors.brown){
           Player p = logic.getPlayerByColor(getColorFromString(doc.documentID));
           if(turnBuffer.length < 4)p.drunk = doc.data['drunk'];
+          if(turnBuffer.length < 4)p.drinks = doc.data['drinks'];
           logic.checkWin(p.color);
           if(logic.isWinner()) Navigator.of(context).pushNamed('/playerselect/game/end', arguments: players);
         }else if(doc.documentID == "accept"){
