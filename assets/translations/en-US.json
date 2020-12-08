@@ -33,7 +33,7 @@
    "join":"Join with ID",
    "host":"Host",
    "spectate":"Spectate",
-   "browse": "Browse",
+   "browse": "Join/Host",
    "open lobbies" : "Open Lobbies",
    
    "sound_settings":"Sound Settings",

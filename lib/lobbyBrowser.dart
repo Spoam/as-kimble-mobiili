@@ -103,7 +103,7 @@ class _LobbyBrowser extends State<LobbyBrowser> {
                     if (document.exists && document['joinable']){
                       return _buildLobbyTile(_getPlayerCount(document), document['ID']);
                     }else
-                      return ListTile();
+                      return Container();
 
 
                   });
@@ -126,7 +126,7 @@ class _LobbyBrowser extends State<LobbyBrowser> {
     CollectionReference lobbyList = Firestore.instance.collection("collectionList");
     QuerySnapshot lobbies = await lobbyList.getDocuments();
     lobbies.documents.forEach((lobby) {
-      if(_getPlayerCount(lobby) == 0) {
+      if(_getPlayerCount(lobby) == 0 && lobby['joinable']) {
         emptyLobbies++;
       }else {
         usedIDs.add(lobby['ID']);

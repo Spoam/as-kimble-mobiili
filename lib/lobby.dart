@@ -760,55 +760,8 @@ class _JoinGame extends State<JoinGame> {
               child: Text('browse').tr(),
             ),
           ),
-          Container( //join button
-              margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-              width: width / 2 - 20,
-              decoration: BoxDecoration(
-                  color: Colors.blue,
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
-                  boxShadow: [
-                    BoxShadow(
-                        color: Colors.black54,
-                        offset: Offset(1, 1),
-                        blurRadius: 0.5,
-                        spreadRadius: 0.5
-                    ),
-                  ]
-              ),
-              child: MaterialButton(
-                onPressed: () {
-                  setState(() {
-                    _join(JoinType.JOIN);
-                  });
-                },
-                child: Text('join').tr(),
-              )
-          ),
-          Container( //start button
-              margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-              width: width / 2 - 20,
-              decoration: BoxDecoration(
-                  color: Colors.blue,
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
-                  boxShadow: [
-                    BoxShadow(
-                        color: Colors.black54,
-                        offset: Offset(1, 1),
-                        blurRadius: 0.5,
-                        spreadRadius: 0.5
-                    ),
-                  ]
-              ),
-              child: MaterialButton(
-                onPressed: () {
-                  setState(() {
-                    _join(JoinType.HOST);
-                  });
-                },
-                child: Text('host').tr(),
-              )
-          ),
-          Container( //start button
+
+          Container( //continue button
               margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
               width: width / 2 - 20,
               decoration: BoxDecoration(
