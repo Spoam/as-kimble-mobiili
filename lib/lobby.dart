@@ -39,7 +39,7 @@ class _HostGame extends State<HostGame>{
   double width = 1;
   double pieceSize = 1;
 
-  bool initReady;
+  bool initReady = false;
 
   var sub;
 
@@ -72,26 +72,52 @@ class _HostGame extends State<HostGame>{
 
     final snapshot = await Firestore.instance
         .collection(gameID.toString())
-        .document('isActive')
+        .document('red')
         .get();
 
     //can't host game with same id unless the game is no longer active
     if (snapshot != null && snapshot.exists) {
-      if(snapshot.data['isActive'] == true){
         _showDialog(context ,"A lobby with that ID already exists");
         return;
-      }
     }
 
     var db = Firestore.instance.collection(gameID.toString());
     print(G.version.substring(0,3));
-    db.document('isActive').setData({'version' : G.version.substring(0,3), 'isActive' : true});
-    db.document('red').setData({'color' : 'red', 'name' : name, 'team' : teamSize, 'drinks' : 0, 'drunk' : 0, 'raises' : 0, 'version' : G.version.substring(0,3)});
+    //db.document('isActive').setData({'version' : G.version.substring(0,3), 'isActive' : true});
+    db.document('red').setData({
+      'color' : 'red',
+      'name' : name,
+      'team' : teamSize,
+      'drinks' : 0,
+      'drunk' : 0,
+      'raises' : 0,
+      'version' : G.version.substring(0,3)});
+
+    final verification = await Firestore.instance
+        .collection(gameID.toString())
+        .document('red')
+        .get();
+
+    if(!verification.exists){
+      _showDialog(context ,"Lobby creation failed");
+      return;
+    }
+
+    var collections = Firestore.instance.collection("collectionList");
+    collections.document(gameID.toString()).setData({
+      'version' : G.version.substring(0,3),
+      'joinable' : true,
+      'red' : true,
+      'blue' : false,
+      'green' : false,
+      'yellow' : false,
+      'ID':gameID});
+
+
     //players.add(Player(name, Colors.red, teamSize));
     localPlayers.add(Colors.red);
     ready[0] = true;
     initReady = true;
-
   }
 
   void _joinLobby(String name, int teamSize) async{
@@ -101,9 +127,9 @@ class _HostGame extends State<HostGame>{
         .getDocuments();
 
     //number of players in lobby. -1 because isActive document
-    int index = snapshot.documents.length - 1;
+    int index = snapshot.documents.length;
 
-    ready.setRange(0, index - 1, [true, true, true, true]);
+    ready.setRange(0, index, [true, true, true, true]);
 
     //this means there is no host
     assert(index != 0);
@@ -136,6 +162,10 @@ class _HostGame extends State<HostGame>{
     var db = Firestore.instance.collection(gameID.toString());
     db.document(color).setData({'color' : color, 'name' : name, 'team' : teamSize,'drinks' : 0, 'drunk' : 0, 'raises' : 0, 'version' : G.version.substring(0,3)});
     //players.add(Player(name, getColorFromString(color), teamSize));
+
+    var collections = Firestore.instance.collection("collectionList");
+    collections.document(gameID.toString()).setData({'version' : G.version.substring(0,3), color : true}, merge: true);
+    
     localPlayers.add(getColorFromString(color));
     ready[index] = true;
     initReady = true;
@@ -144,6 +174,9 @@ class _HostGame extends State<HostGame>{
   void _startGame(bool cont) async{
 
     QuerySnapshot snapshot = await Firestore.instance.collection(gameID.toString()).getDocuments();
+
+    var collections = Firestore.instance.collection("collectionList");
+    collections.document(gameID.toString()).setData({'version' : G.version.substring(0,3), 'joinable' : false}, merge: true);
 
     snapshot.documents.forEach((f) => {
       if (f.data['name'] != null){
@@ -173,6 +206,7 @@ class _HostGame extends State<HostGame>{
   void _waitForStart(){
 
     CollectionReference reference = Firestore.instance.collection(gameID.toString());
+    var list = Firestore.instance.collection("collectionList");
     sub = reference.snapshots().listen((querySnapshot) {
       querySnapshot.documentChanges.forEach((change){
 
@@ -181,6 +215,7 @@ class _HostGame extends State<HostGame>{
         reference.document("red").get()
             .then((doc) {
               if(!doc.exists){
+                //list.document(gameID.toString()).setData({'version' : G.version.substring(0,3), 'joinable' : false}, merge: true);
                 _showDialog(context ,"host has left");
               }
         });
@@ -413,7 +448,11 @@ class _HostGame extends State<HostGame>{
 
   void _leave(){
     CollectionReference reference = Firestore.instance.collection(gameID.toString());
-    localPlayers.forEach((p) => reference.document(getStringFromColor(p)).delete());
+    CollectionReference collectionList = Firestore.instance.collection("collectionList");
+    localPlayers.forEach((p) => {
+      reference.document(getStringFromColor(p)).delete(),
+      collectionList.document(gameID.toString()).setData({"version" : G.version.substring(0,3), getStringFromColor(p) : false}, merge: true)
+    });
     //if(host) reference.document("isActive").delete();
   }
 
@@ -485,10 +524,10 @@ class _HostGame extends State<HostGame>{
           appBar: AppBar(
             title:Text('Lobby'),
           ),
-        body:ListView(
+          body:ListView(
 
         children:[
-          Container(
+            Container(
             width: width / 2,
             height: pieceSize * 1.5,
             margin: EdgeInsets.fromLTRB(20, 10, 20, 10),
@@ -496,15 +535,15 @@ class _HostGame extends State<HostGame>{
               color: Colors.white,
               borderRadius: BorderRadius.all(Radius.circular(5)),
               ),
-            child: Text('ID: ' + gameID.toString(),
+              child: Text('ID: ' + gameID.toString(),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: pieceSize*1.2,
               ),
             ),
           ),
-          _playerStream(),
-          ready.every( (elem) => elem ) && host ? Container( //start button
+            _playerStream(),
+            ready.every( (elem) => elem ) && host ? Container( //start button
               margin: const EdgeInsets.fromLTRB(10,10,10,10),
               width: width / 2 - 20,
               decoration: BoxDecoration(
@@ -589,6 +628,10 @@ class _JoinGame extends State<JoinGame> {
   void _join(JoinType type){
     if(nameInput.text.isEmpty) return;
     if(teamSizeInput.text.isEmpty) return;
+    if(type == JoinType.BROWSE){
+      Navigator.of(context).pushNamed('/join/browse', arguments: JoinArguments(-1, type, nameInput.text, int.parse(teamSizeInput.text)));
+      return;
+    }
     if(gameIDInput.text.isEmpty) return;
     Navigator.of(context).pushNamed('/join/lobby', arguments: JoinArguments(int.parse(gameIDInput.text), type, nameInput.text, int.parse(teamSizeInput.text)));
   }
@@ -693,7 +736,31 @@ class _JoinGame extends State<JoinGame> {
               ),
             ],
           ),
-          Container( //start button
+          Container( //spectate
+            margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+            width: width / 2 - 20,
+            decoration: BoxDecoration(
+                color: Colors.blue,
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black54,
+                      offset: Offset(1, 1),
+                      blurRadius: 0.5,
+                      spreadRadius: 0.5
+                  ),
+                ]
+            ),
+            child: MaterialButton(
+              onPressed: () {
+                setState(() {
+                  _join(JoinType.BROWSE);
+                });
+              },
+              child: Text('browse').tr(),
+            ),
+          ),
+          Container( //join button
               margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
               width: width / 2 - 20,
               decoration: BoxDecoration(
@@ -824,5 +891,6 @@ enum JoinType{
   HOST,
   JOIN,
   CONTINUE,
-  SPECTATE
+  SPECTATE,
+  BROWSE
 }

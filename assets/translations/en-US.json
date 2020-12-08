@@ -30,9 +30,11 @@
    "drink_amount":"Drunk: {}",
    "penalty_amount":"Penalties: {}",
    "continue":"Continue",
-   "join":"Join",
+   "join":"Join with ID",
    "host":"Host",
    "spectate":"Spectate",
+   "browse": "Browse",
+   "open lobbies" : "Open Lobbies",
    
    "sound_settings":"Sound Settings",
   "korotus"	: "raise",

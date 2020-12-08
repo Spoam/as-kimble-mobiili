@@ -4,6 +4,7 @@ import 'package:kimble/gameUI.dart';
 import 'package:kimble/winScreen.dart';
 import 'package:kimble/playerSelect.dart';
 import 'package:kimble/lobby.dart';
+import 'package:kimble/lobbyBrowser.dart';
 import 'package:package_info/package_info.dart';
 import 'settings.dart';
 import 'package:audioplayers/audio_cache.dart';
@@ -49,6 +50,7 @@ class MyApp extends StatelessWidget {
         '/join/lobby' : (BuildContext context) => HostGame(),
         '/join' : (BuildContext context) => JoinGame(),
         '/settings' : (BuildContext context) => Settings(),
+        '/join/browse' : (BuildContext context) => LobbyBrowser()
       },
     );
   }

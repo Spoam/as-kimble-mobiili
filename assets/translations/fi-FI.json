@@ -30,9 +30,11 @@
    "drink_amount":"Juotu: {}",
    "penalty_amount":"Sakot: {}",
    "continue":"Jatka",
-   "join":"Liity",
+   "join":"Liity ID:llä",
    "host":"Hostaa",
    "spectate":"Katso peliä",
+   "browse": "Selaa",
+   "open lobbies" : "Avoimet huoneet",
    
    "sound_settings":"Ääniasetukset",
    "korotus"	: "korotus",
