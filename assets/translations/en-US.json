@@ -35,6 +35,8 @@
    "spectate":"Spectate",
    "browse": "Join/Host",
    "open lobbies" : "Open Lobbies",
+  "name error" : "Please choose a name first",
+   "join direct" : "Join with ID",
    
    "sound_settings":"Sound Settings",
   "korotus"	: "raise",

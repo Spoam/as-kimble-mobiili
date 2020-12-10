@@ -35,6 +35,8 @@
    "spectate":"Katso peliä",
    "browse": "Liity/Hostaa",
    "open lobbies" : "Avoimet huoneet",
+  "name error" : "Valitse ensin nimi",
+   "join direct" : "Liity ID:llä",
    
    "sound_settings":"Ääniasetukset",
    "korotus"	: "korotus",

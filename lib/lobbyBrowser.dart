@@ -170,6 +170,10 @@ class _LobbyBrowser extends State<LobbyBrowser> {
         body: ListView(
           children: [
             _buildLobbyStream(),
+            IconButton(
+                onPressed: () {_ensureEmptyLobby();},
+                icon: Icon(Icons.add_box, size: pieceSize * 1.5, color: Colors.white,),
+                ),
           ],
         ),
 

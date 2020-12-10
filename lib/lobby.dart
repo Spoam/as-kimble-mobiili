@@ -625,8 +625,33 @@ class _JoinGame extends State<JoinGame> {
   TextEditingController gameIDInput = TextEditingController();
   TextEditingController teamSizeInput = TextEditingController(text: '1');
 
+  void _errorMessage(String message){
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return AlertDialog(
+          title: new Text("Error"),
+          content: new Text(message).tr(),
+          actions: <Widget>[
+            // usually buttons at the bottom of the dialog
+            new FlatButton(
+              child: new Text("back").tr(),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _join(JoinType type){
-    if(nameInput.text.isEmpty) return;
+    if(nameInput.text.isEmpty) {
+      _errorMessage("name error");
+      return;
+    }
     if(teamSizeInput.text.isEmpty) return;
     if(type == JoinType.BROWSE){
       Navigator.of(context).pushNamed('/join/browse', arguments: JoinArguments(-1, type, nameInput.text, int.parse(teamSizeInput.text)));
@@ -653,27 +678,6 @@ class _JoinGame extends State<JoinGame> {
       body: ListView(
 
         children: [
-        Container(
-          width: width / 2,
-          height: pieceSize * 2,
-          margin: EdgeInsets.fromLTRB(40, 10, 40, 10),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.all(Radius.circular(5)),
-          ),
-          child: TextFormField(
-              keyboardType: TextInputType.number,
-              textAlign: TextAlign.center,
-              controller: gameIDInput,
-              style: TextStyle(
-                fontSize: pieceSize*1.5,
-              ),
-              decoration: InputDecoration.collapsed(
-                hintText: 'game id',
-
-              )
-            ),
-        ),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           textBaseline: TextBaseline.alphabetic,
@@ -696,7 +700,7 @@ class _JoinGame extends State<JoinGame> {
                   fontSize: pieceSize * 1.5,
                 ),
                 decoration: InputDecoration(
-                  hintText: 'name here',
+                  hintText: 'name',
                   counter: Offstage(),
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.fromLTRB(0, 10, 0, 0),
@@ -761,7 +765,7 @@ class _JoinGame extends State<JoinGame> {
             ),
           ),
 
-          Container( //continue button
+          Container( //direct connect button
               margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
               width: width / 2 - 20,
               decoration: BoxDecoration(
@@ -779,10 +783,10 @@ class _JoinGame extends State<JoinGame> {
               child: MaterialButton(
                 onPressed: () {
                   setState(() {
-                    _join(JoinType.CONTINUE);
+                    _join(JoinType.JOIN);
                   });
                 },
-                child: Text('continue').tr(),
+                child: Text('join direct').tr(),
               )
           ),
           Container( //spectate
@@ -808,6 +812,27 @@ class _JoinGame extends State<JoinGame> {
                 },
                 child: Text('spectate').tr(),
               ),
+          ),
+          Container(
+            width: width / 2,
+            height: pieceSize * 2,
+            margin: EdgeInsets.fromLTRB(40, 10, 40, 10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.all(Radius.circular(5)),
+            ),
+            child: TextFormField(
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.center,
+                controller: gameIDInput,
+                style: TextStyle(
+                  fontSize: pieceSize*1.5,
+                ),
+                decoration: InputDecoration.collapsed(
+                  hintText: 'game id',
+
+                )
+            ),
           ),
           FloatingActionButton( //back button
             onPressed: () {
