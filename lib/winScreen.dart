@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:kimble/gameUI.dart';
 import 'package:kimble/player.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'globals.dart' as G;
+
 
 class WinScreen extends StatefulWidget{
 
@@ -14,7 +19,7 @@ class _WinState extends State<WinScreen>{
 
     players.sort((playerA,playerB) => (playerB.drunk/playerB.players).compareTo(playerA.drunk/playerA.players));
 
-    var drinks = players.where((player) => player.drunk/player.players == players[0].drunk/players[0].players);
+    Iterable<Player> drinks = players.where((player) => player.drunk/player.players == players[0].drunk/players[0].players);
 
     drinks.forEach((player) => player.moralWinner = true);
 
@@ -45,12 +50,32 @@ class _WinState extends State<WinScreen>{
     );
   }
 
+  _clearGame(int gameID) async{
+    CollectionReference ref = Firestore.instance.collection(gameID.toString());
+    QuerySnapshot docs = await ref.getDocuments();
+    docs.documents.forEach((doc) {doc.reference.delete();});
+
+    CollectionReference collectionList = Firestore.instance.collection("collectionList");
+    collectionList.document(gameID.toString()).setData({
+      'version' : G.version.substring(0,3),
+      'ID' : gameID,
+      'joinable' : true,
+      'red' : false,
+      'blue' : false,
+      'green' : false,
+      'yellow' : false});
+
+  }
+
   @override
   Widget build(BuildContext context){
 
-    players = ModalRoute.of(context).settings.arguments;
+    WinArguments args = ModalRoute.of(context).settings.arguments;
+    players = args.players;
+    int gameID = args.gameID;
 
     _findMoralWinner();
+    _clearGame(gameID);
 
     double width = MediaQuery.of(context).size.width;
 
@@ -59,7 +84,7 @@ class _WinState extends State<WinScreen>{
     return Scaffold(
       backgroundColor: Colors.white30,
       appBar: AppBar(
-        title:Text('Tulokset'),
+        title:Text('results').tr(),
       ),
       body:ListView(
         children:[
@@ -72,7 +97,7 @@ class _WinState extends State<WinScreen>{
             onPressed:(){
               Navigator.popUntil(context, ModalRoute.withName('/'));
             },
-            child:Text('päävalikkoon'),
+            child:Text('back to menu').tr(),
           ),
         ],
       ),

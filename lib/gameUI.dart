@@ -557,7 +557,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
             logic.getPlayerByColor(col).drunk += amount;
           });
         }
-        if(logic.checkWin(col)) Navigator.of(context).pushNamed('/playerselect/game/end', arguments: players);
+        if(logic.checkWin(col)) Navigator.of(context).pushNamed('/playerselect/game/end', arguments: WinArguments(players, gameID));
       }
   }
 
@@ -572,7 +572,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
           logic.getPlayerByColor(col).drinks += amount;
         });
       }
-      if(logic.checkWin(col)) Navigator.of(context).pushNamed('/playerselect/game/end', arguments: players);
+      if(logic.checkWin(col)) Navigator.of(context).pushNamed('/playerselect/game/end', arguments: WinArguments(players, gameID));
   }
 
   _addPenaltyToDatabase(String color, bool drink){
@@ -628,7 +628,7 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
           if(turnBuffer.length < 4)p.drunk = doc.data['drunk'];
           if(turnBuffer.length < 4)p.drinks = doc.data['drinks'];
           logic.checkWin(p.color);
-          if(logic.isWinner()) Navigator.of(context).pushNamed('/playerselect/game/end', arguments: players);
+          if(logic.isWinner()) Navigator.of(context).pushNamed('/playerselect/game/end', arguments: WinArguments(players, gameID));
         }else if(doc.documentID == "accept"){
           if(!localPlayers.contains(logic.turn.getCurrent())){
             //_pollRaiseMessage();
@@ -1036,4 +1036,10 @@ class _GameWindowState extends State<GameWindow> with TickerProviderStateMixin{
         ),
     );
     }
+  }
+
+  class WinArguments{
+    final List<Player> players;
+    final int gameID;
+    WinArguments(this.players, this.gameID);
   }
