@@ -214,7 +214,7 @@ class _HostGame extends State<HostGame>{
 
         reference.document("red").get()
             .then((doc) {
-              if(!doc.exists){
+              if(!doc.exists && !host){
                 //list.document(gameID.toString()).setData({'version' : G.version.substring(0,3), 'joinable' : false}, merge: true);
                 _showDialog(context ,"host has left");
               }
