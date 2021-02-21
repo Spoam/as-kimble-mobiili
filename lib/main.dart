@@ -93,7 +93,7 @@ class _MainMenuState extends State<MainMenu> {
 
   Future<String> getUUID() async {
     G.UUID = await PlatformDeviceId.getDeviceId;
-    Firestore.instance.collection("Users").document(G.UUID).setData({'Lobby' : null});
+    Firestore.instance.collection("Users").document(G.UUID).setData({'version' : G.version}, merge: true);
   }
 
   String _saveNewest(DocumentSnapshot data){

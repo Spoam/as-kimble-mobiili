@@ -91,6 +91,7 @@ class _HostGame extends State<HostGame>{
       'drinks' : 0,
       'drunk' : 0,
       'raises' : 0,
+      'UUID' : G.UUID,
       'version' : G.version.substring(0,3)});
 
     final verification = await Firestore.instance
@@ -111,22 +112,25 @@ class _HostGame extends State<HostGame>{
       'blue' : false,
       'green' : false,
       'yellow' : false,
-      'ID':gameID});
+      'ID' : gameID,
+      'hostID' : G.UUID,
+      'restricted' : false});
 
 
     //players.add(Player(name, Colors.red, teamSize));
     localPlayers.add(Colors.red);
     ready[0] = true;
     initReady = true;
+    _clearFromOldLobbies();
   }
 
-  void _joinLobby(String name, int teamSize) async{
+  void _joinLobby(String name, int teamSize, {bool local = false}) async{
 
     final snapshot = await Firestore.instance
         .collection(gameID.toString())
         .getDocuments();
 
-    //number of players in lobby. -1 because isActive document
+    //number of players in lobby.
     int index = snapshot.documents.length;
 
     ready.setRange(0, index, [true, true, true, true]);
@@ -136,31 +140,37 @@ class _HostGame extends State<HostGame>{
 
     String color = "red";
 
-    switch (index){
+    int returnIndex = snapshot.documents.indexWhere((player) => player['UUID'] == G.UUID);
+    if(returnIndex != -1){
+      color = snapshot.documents[returnIndex].documentID;
+    }
+    if(returnIndex == -1 || local){
+      switch (index){
 
-      case 1:
-        color = "blue";
-        break;
+        case 1:
+          color = "blue";
+          break;
 
-      case 2:
-        color = "green";
-        break;
+        case 2:
+          color = "green";
+          break;
 
-      case 3:
-        color = "yellow";
-        break;
+        case 3:
+          color = "yellow";
+          break;
 
-      case 4:
-        _showDialog(context, "Lobby is full");
-        return;
+        case 4:
+          _showDialog(context, "Lobby is full");
+          return;
 
-      default:
-        return;
+        default:
+          return;
 
+      }
     }
 
     var db = Firestore.instance.collection(gameID.toString());
-    db.document(color).setData({'color' : color, 'name' : name, 'team' : teamSize,'drinks' : 0, 'drunk' : 0, 'raises' : 0, 'version' : G.version.substring(0,3)});
+    db.document(color).setData({'color' : color, 'name' : name, 'team' : teamSize,'drinks' : 0, 'drunk' : 0, 'raises' : 0, 'UUID' : G.UUID,'version' : G.version.substring(0,3)});
     //players.add(Player(name, getColorFromString(color), teamSize));
 
     var collections = Firestore.instance.collection("collectionList");
@@ -169,6 +179,9 @@ class _HostGame extends State<HostGame>{
     localPlayers.add(getColorFromString(color));
     ready[index] = true;
     initReady = true;
+    if(color == 'red') host = true;
+    _clearFromOldLobbies();
+
   }
 
   void _startGame(bool cont) async{
@@ -379,7 +392,7 @@ class _HostGame extends State<HostGame>{
             MaterialButton(
               onPressed:(){
                 if(ready.contains(false)){
-                  _joinLobby(localPlayerNameInput.text, int.parse(localPlayerCountInput.text));
+                  _joinLobby(localPlayerNameInput.text, int.parse(localPlayerCountInput.text), local : true);
                 }
                 setState(() {
                   localPlayerNameInput.clear();
@@ -446,13 +459,17 @@ class _HostGame extends State<HostGame>{
     );
   }
 
-  void _leave(){
+  void _leave() async{
     CollectionReference reference = Firestore.instance.collection(gameID.toString());
     CollectionReference collectionList = Firestore.instance.collection("collectionList");
-    localPlayers.forEach((p) => {
-      reference.document(getStringFromColor(p)).delete(),
-      collectionList.document(gameID.toString()).setData({"version" : G.version.substring(0,3), getStringFromColor(p) : false}, merge: true)
-    });
+    for(int i = 0; i < localPlayers.length; i++){
+      String color = getStringFromColor(localPlayers[i]);
+      var playerData = await reference.document(color).get();
+      if( playerData['UUID'] == G.UUID) {
+        reference.document(color).delete();
+        collectionList.document(gameID.toString()).setData({"version" : G.version.substring(0,3), color : false, 'restricted' : false }, merge: true);
+      }
+    }
     //if(host) reference.document("isActive").delete();
   }
 
@@ -479,7 +496,27 @@ class _HostGame extends State<HostGame>{
       });
   }
 
+  void  _clearFromOldLobbies() async{
 
+    DocumentSnapshot userData = await Firestore.instance.collection("Users").document(G.UUID).get();
+    if (userData.exists){
+      String lobbyID = userData['Lobby'];
+      if (lobbyID == null || lobbyID == gameID.toString()) return;
+
+      QuerySnapshot gameData = await Firestore.instance.collection(lobbyID).getDocuments();
+      String color = "no color";
+      gameData.documents.forEach((doc) {
+        print(doc['UUID']);
+        if(doc['UUID'] == G.UUID){
+          color = doc.documentID;
+        }
+      });
+      Firestore.instance.collection(lobbyID).document(color).delete();
+      Firestore.instance.collection("collectionList").document(lobbyID).setData({"version" : G.version.substring(0,3), color : false, 'restricted' : false }, merge: true);
+      Firestore.instance.collection("Users").document(G.UUID).setData({'version' : G.version, 'Lobby' : gameID.toString()});
+
+    }
+  }
 
   @override
   void dispose(){
@@ -488,9 +525,10 @@ class _HostGame extends State<HostGame>{
   }
 
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
 
     if(first){
+
       JoinArguments args = ModalRoute.of(context).settings.arguments;
       gameID = args.id;
       JoinType type = args.type;

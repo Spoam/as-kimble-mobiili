@@ -100,8 +100,11 @@ class _LobbyBrowser extends State<LobbyBrowser> {
                   itemCount: snapshot.data.documents.length,
                   itemBuilder: (BuildContext context, int index) {
                     final DocumentSnapshot document = snapshot.data.documents[index];
-                    if (document.exists && document['joinable']){
-                      return _buildLobbyTile(_getPlayerCount(document), document['ID']);
+                    if (document.exists &&
+                        document['joinable'] &&
+                        (!document['restricted'] || document['hostID'] == G.UUID))
+                    {
+                          return _buildLobbyTile(_getPlayerCount(document), document['ID']);
                     }else
                       return Container();
 
@@ -126,7 +129,10 @@ class _LobbyBrowser extends State<LobbyBrowser> {
     CollectionReference lobbyList = Firestore.instance.collection("collectionList");
     QuerySnapshot lobbies = await lobbyList.getDocuments();
     lobbies.documents.forEach((lobby) {
-      if(_getPlayerCount(lobby) == 0 && lobby['joinable']) {
+      if(_getPlayerCount(lobby) == 0 &&
+          lobby['joinable'] &&
+          (!lobby['restricted'] || lobby['hostID'] == G.UUID))
+      {
         emptyLobbies++;
       }else {
         usedIDs.add(lobby['ID']);
@@ -143,7 +149,9 @@ class _LobbyBrowser extends State<LobbyBrowser> {
         'green' : false,
         'yellow' : false,
         'ID': newID,
-        'joinable' : true});
+        'joinable' : true,
+        'hostID' : G.UUID,
+        'restricted' : true});
     }
   }
 
