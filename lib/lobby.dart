@@ -683,6 +683,7 @@ class _JoinGame extends State<JoinGame> {
           textBaseline: TextBaseline.alphabetic,
           mainAxisAlignment:  MainAxisAlignment.center,
           children:[
+
             Container(
                   width: width / 2,
                   height: pieceSize * 2,

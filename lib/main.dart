@@ -10,6 +10,7 @@ import 'settings.dart';
 import 'package:audioplayers/audio_cache.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:platform_device_id/platform_device_id.dart';
 import 'globals.dart' as G;
 
 void main() {
@@ -90,10 +91,17 @@ class _MainMenuState extends State<MainMenu> {
     //	String buildNumber = packageInfo.buildNumber;
   }
 
+  Future<String> getUUID() async {
+    G.UUID = await PlatformDeviceId.getDeviceId;
+    Firestore.instance.collection("Users").document(G.UUID).setData({'Lobby' : null});
+  }
+
   String _saveNewest(DocumentSnapshot data){
     newest = data["newest"];
     return newest;
   }
+
+  bool oldVersion = false;
 
   @override
   Widget build(BuildContext context){
@@ -101,6 +109,7 @@ class _MainMenuState extends State<MainMenu> {
     double width = MediaQuery.of(context).size.width - 20;
 
     getVersionNumber();
+    getUUID();
 
     return Scaffold(
       appBar: AppBar(
@@ -117,7 +126,7 @@ class _MainMenuState extends State<MainMenu> {
             builder: (BuildContext context, AsyncSnapshot snapshot) =>
               Text("newest " + (snapshot.hasData ? "${_saveNewest(snapshot.data)}" : "?.?.?")),
           ),
-          G.version.substring(0,3) != newest.substring(0,3) ? Container(
+          oldVersion ? Container(
             width: width,
             color: Colors.white,
             child: Text("ERROR. APP VERSION TOO OLD FOR ONLINE PLAY",
@@ -173,6 +182,8 @@ class _MainMenuState extends State<MainMenu> {
                 });
                 if(double.parse(G.version.substring(0,3)) >= double.parse(newest.substring(0,3))){
                   Navigator.of(context).pushNamed('/join');
+                }else{
+                  oldVersion = true;
                 }
 
               },
