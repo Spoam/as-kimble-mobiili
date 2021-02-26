@@ -135,39 +135,30 @@ class _HostGame extends State<HostGame>{
 
     ready.setRange(0, index, [true, true, true, true]);
 
-    //this means there is no host
+    //this means there is no host which should never happen when joining an existing lobby
     assert(index != 0);
 
-    String color = "red";
+    String color = "no color";
 
     int returnIndex = snapshot.documents.indexWhere((player) => player['UUID'] == G.UUID);
-    if(returnIndex != -1){
+    //if player is already in lobby
+    if(returnIndex != -1 && !host){
       color = snapshot.documents[returnIndex].documentID;
-    }
-    if(returnIndex == -1 || local){
-      switch (index){
+    }else{
 
-        case 1:
-          color = "blue";
-          break;
+      List<String> freeSlots = ["red", "blue", "yellow", "green"];
 
-        case 2:
-          color = "green";
-          break;
+      snapshot.documents.forEach((doc) {freeSlots.remove(doc.documentID); });
 
-        case 3:
-          color = "yellow";
-          break;
-
-        case 4:
-          _showDialog(context, "Lobby is full");
-          return;
-
-        default:
-          return;
-
+      if(freeSlots.isEmpty){
+        return;
+      }
+      else{
+        color = freeSlots[0];
       }
     }
+
+
 
     var db = Firestore.instance.collection(gameID.toString());
     db.document(color).setData({'color' : color, 'name' : name, 'team' : teamSize,'drinks' : 0, 'drunk' : 0, 'raises' : 0, 'UUID' : G.UUID,'version' : G.version.substring(0,3)});
@@ -223,7 +214,7 @@ class _HostGame extends State<HostGame>{
     sub = reference.snapshots().listen((querySnapshot) {
       querySnapshot.documentChanges.forEach((change){
 
-        int index = querySnapshot.documents.length - 1;
+        int index = querySnapshot.documents.length;
 
         reference.document("red").get()
             .then((doc) {
@@ -233,8 +224,21 @@ class _HostGame extends State<HostGame>{
               }
         });
 
-        if(index <= 4 && index >= 0) setState(() {
+        if(change.document['UUID'] == G.UUID){
+          reference.document(change.document.documentID).get()
+              .then((doc) {
+
+                if(!doc.exists && !host){
+                  _showDialog(context, "kicked by host");
+                }
+
+          });
+        }
+
+        setState(() {
+          ready.setRange(0, 4, [false, false, false, false]);
           ready.setRange(0, index, [true, true, true, true]);
+
         });
 
         if(change.document.documentID == 'go'){
@@ -411,7 +415,8 @@ class _HostGame extends State<HostGame>{
       return Container();
     }
 
-    return Row(
+    return Container(child:Column(
+        children :[Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       textBaseline: TextBaseline.alphabetic,
       mainAxisAlignment:  MainAxisAlignment.center,
@@ -419,7 +424,7 @@ class _HostGame extends State<HostGame>{
         Container(
           width: width / 1.5,
           height: pieceSize * 2,
-          margin: EdgeInsets.fromLTRB(10, 10, 2.5, 10),
+          margin: EdgeInsets.fromLTRB(10, 10, 2.5, 2.5),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.all(Radius.circular(5)),
@@ -434,29 +439,55 @@ class _HostGame extends State<HostGame>{
 
         Container(
           margin: EdgeInsets.fromLTRB(2.5, 10, 0, 10),
-          width: pieceSize * 2,
-          height: pieceSize * 2,
+          width: pieceSize * 1.5,
+          height: pieceSize * 1.5,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.only(topLeft: Radius.circular(20), bottomLeft: Radius.circular(20)),
           ),
-          child: Icon(Icons.accessibility_new, color: getColorFromString(color), size: pieceSize * 2,),
+          child: Icon(Icons.accessibility_new, color: getColorFromString(color), size: pieceSize * 1.5,),
         ),
 
         Container(
-          width: pieceSize*2,
-          height: pieceSize * 2,
+          width: pieceSize * 1,
+          height: pieceSize * 1.5,
           margin: EdgeInsets.fromLTRB(0, 10, 10, 10),
           color: Colors.white,
           child:
           Text(playerCount.toString(),
             style: TextStyle(
-              fontSize: pieceSize*2,
+              fontSize: pieceSize * 1.5,
             ),
             ),
           ),
+
       ],
-    );
+    ),
+          host && color != "red" ? Container(
+            width: pieceSize * 3,
+            height: pieceSize * 1.5,
+            margin: EdgeInsets.fromLTRB(0, 2.5, 10, 10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.all(Radius.circular(10)),
+            ),
+            child:
+            MaterialButton(
+              onPressed:(){
+                _kick(color);
+              },
+              child:Text('kick', textScaleFactor: 1.5,),
+            ),
+          ) : Container(),
+    ],
+    ));
+  }
+
+  void _kick(String color) {
+    CollectionReference reference = Firestore.instance.collection(gameID.toString());
+    CollectionReference collectionList = Firestore.instance.collection("collectionList");
+    reference.document(color).delete();
+    collectionList.document(gameID.toString()).setData({"version" : G.version.substring(0,3), color : false, 'restricted' : false }, merge: true);
   }
 
   void _leave() async{
